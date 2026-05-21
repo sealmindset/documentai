@@ -1,4 +1,4 @@
-FROM node:20.20.1-alpine AS base
+FROM node:22-alpine AS base
 
 # Update system packages and install OpenSSL for Prisma compatibility
 RUN apk upgrade --no-cache && apk add --no-cache openssl

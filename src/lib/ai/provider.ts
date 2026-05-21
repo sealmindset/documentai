@@ -327,7 +327,7 @@ async function callOllama(
 // Public API
 // ============================================
 
-export type AIProvider = 'anthropic_foundry' | 'claude' | 'openai' | 'ollama'
+export type AIProvider = 'anthropic_foundry' | 'claude' | 'anthropic' | 'openai' | 'ollama'
 
 function getProvider(): AIProvider {
   return (process.env.AI_PROVIDER || 'anthropic_foundry') as AIProvider
@@ -346,6 +346,7 @@ export async function chat(
     case 'anthropic_foundry':
       return callAzureFoundry(messages, options)
     case 'claude':
+    case 'anthropic':
       return callClaude(messages, options)
     case 'openai':
       return callOpenAI(messages, options)

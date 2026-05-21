@@ -19,7 +19,8 @@ services:
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-mock-oidc-secret}
       - JWT_SECRET=${JWT_SECRET:-docker-dev-jwt-secret-not-for-production}
       # AI Provider
-      - AI_PROVIDER=${AI_PROVIDER:-anthropic_foundry}
+      - AI_PROVIDER=${AI_PROVIDER:-claude}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - AZURE_AI_FOUNDRY_ENDPOINT=${AZURE_AI_FOUNDRY_ENDPOINT:-}
       - AZURE_AI_FOUNDRY_API_KEY=${AZURE_AI_FOUNDRY_API_KEY:-}
       - AI_MODEL_COMPLEX=${AI_MODEL_COMPLEX:-}
