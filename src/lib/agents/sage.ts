@@ -125,6 +125,7 @@ Instructions:
       })
 
       return this.createResult(true, {
+        id: generated.id,
         documentName,
         content: polishedContent,
         resolvedFields: resolved,

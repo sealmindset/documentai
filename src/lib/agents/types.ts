@@ -253,6 +253,7 @@ export interface DocumentGenerationInput {
 }
 
 export interface DocumentGenerationOutput {
+  id: string
   documentName: string
   content: string
   resolvedFields: Record<string, string>

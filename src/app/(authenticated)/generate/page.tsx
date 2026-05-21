@@ -42,6 +42,7 @@ interface MergeFields {
 interface GenerationResult {
   success: boolean
   document?: {
+    id?: string
     documentName: string
     content: string
     resolvedFields: Record<string, string>
@@ -65,6 +66,8 @@ export default function GeneratePage() {
   const [generating, setGenerating] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [loadingFields, setLoadingFields] = useState(false)
+  const [approving, setApproving] = useState(false)
+  const [approvedStatus, setApprovedStatus] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/templates')
@@ -128,6 +131,34 @@ export default function GeneratePage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
+  }
+
+  const handleApprove = async () => {
+    if (!result?.document?.id) return
+    setApproving(true)
+    try {
+      const res = await fetch(`/api/generated-documents/${result.document.id}/approve`, {
+        method: 'PUT',
+      })
+      if (res.ok) {
+        setApprovedStatus('APPROVED')
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setApproving(false)
+    }
+  }
+
+  const handleDownload = () => {
+    if (!result?.document) return
+    const blob = new Blob([result.document.content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${result.document.documentName}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const selectedTemplateName = templates.find((t) => t.id === selectedTemplate)?.name
@@ -327,6 +358,33 @@ export default function GeneratePage() {
                         <Copy className="h-4 w-4 mr-1" />
                         Copy
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownload}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                      {approvedStatus === 'APPROVED' ? (
+                        <Badge className="bg-green-100 text-green-800 px-3 py-1">
+                          <Check className="h-3 w-3 mr-1" />
+                          Approved
+                        </Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={handleApprove}
+                          disabled={approving || !result.document?.id}
+                        >
+                          {approving ? (
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            <Check className="h-4 w-4 mr-1" />
+                          )}
+                          Approve
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
