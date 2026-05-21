@@ -38,8 +38,11 @@ This project integrates AI capabilities with legal document management to stream
 | **RITA** | Report Intelligence & Threat Assessment Agent | Report generation, executive summaries | standard |
 | **ATLAS** | Action Tracking & Legal Advisory System Agent | Action items, escalation management | standard |
 | **AURA** | Automated Upload & Recognition Agent | Document extraction, deduplication | standard |
+| **SAGE** | Structured Assembly & Generation Engine | Court document generation from templates | standard |
+| **ECHO** | Email Communications & Handoff Orchestrator | Outbound email composition and delivery via M365 Graph | standard |
 
 Pipeline: LEXA → CLARA → DORA → ARIA → RITA → ATLAS
+Document Pipeline: SAGE → ECHO (generate document → draft courtesy email)
 
 ## Data Model
 
@@ -52,6 +55,10 @@ Pipeline: LEXA → CLARA → DORA → ARIA → RITA → ATLAS
 | ActionItem | `action_items` | Court deadlines and remediation tasks |
 | Document | `documents` | Legal documents and evidence |
 | Report | `reports` | AI-generated case reports |
+| DocumentTemplate | `document_templates` | Court document templates with merge fields |
+| GeneratedDocument | `generated_documents` | SAGE-generated court documents |
+| OutboundEmail | `outbound_emails` | Attorney-approved outbound emails |
+| EmailTemplate | `email_templates` | Email templates for ECHO agent |
 
 ## Project Structure
 

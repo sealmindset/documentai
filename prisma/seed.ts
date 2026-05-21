@@ -19,6 +19,7 @@ const APP_RESOURCES = [
   'prompts',
   'templates',
   'generated-documents',
+  'emails',
 ]
 
 const SYSTEM_RESOURCES = ['users', 'roles', 'logs']
@@ -2370,6 +2371,89 @@ _______________________________          _______________
     }
   }
   console.log(`  ${templates.length} document templates`)
+
+  // ============================================
+  // EMAIL TEMPLATES (ECHO Agent)
+  // ============================================
+
+  console.log('Seeding email templates...')
+
+  const emailTemplates = [
+    {
+      name: 'Prosecutor Courtesy Notice',
+      category: 'COURTESY',
+      subject: 'Re: State v. {{client.name}} — {{case.caseNumber}} — Entry of Appearance',
+      body: `Dear {{prosecutor.name}},
+
+I am writing to advise that I have been retained to represent {{client.name}} in the above-referenced matter, Case No. {{case.caseNumber}}.
+
+I have filed an Entry of Appearance with the Court and request that all future communications regarding this case be directed to my office at the address below.
+
+I look forward to working with you on this matter. Please do not hesitate to contact me if you have any questions or if there are any pending matters that require immediate attention.
+
+{{attorney.signature}}`,
+    },
+    {
+      name: 'Discovery Request Follow-Up',
+      category: 'DISCOVERY_REQUEST',
+      subject: 'Re: State v. {{client.name}} — {{case.caseNumber}} — Discovery Request',
+      body: `Dear {{prosecutor.name}},
+
+I am writing regarding discovery in the above-referenced matter. I respectfully request the following materials be provided at your earliest convenience:
+
+1. All police reports and supplemental reports
+2. Body camera and dash camera footage
+3. Witness statements and interview recordings
+4. Lab results and forensic reports
+5. Any exculpatory material pursuant to Brady v. Maryland
+
+The next hearing in this matter is currently scheduled for {{dates.nextHearingDate}}. Timely receipt of these materials will allow us to proceed efficiently.
+
+Thank you for your cooperation.
+
+{{attorney.signature}}`,
+    },
+    {
+      name: 'Hearing Scheduling Request',
+      category: 'SCHEDULING',
+      subject: 'Re: State v. {{client.name}} — {{case.caseNumber}} — Scheduling',
+      body: `Dear {{prosecutor.name}},
+
+I am writing regarding scheduling in the above-referenced matter. I would like to discuss available dates for the {{dates.nextHearingType}} hearing.
+
+Would you be available for a brief call to coordinate schedules before we contact the Court? I can be reached at {{attorney.phone}} or via email at {{attorney.email}}.
+
+Thank you for your time.
+
+{{attorney.signature}}`,
+    },
+    {
+      name: 'General Follow-Up',
+      category: 'FOLLOW_UP',
+      subject: 'Re: State v. {{client.name}} — {{case.caseNumber}}',
+      body: `Dear {{prosecutor.name}},
+
+I am following up on our previous correspondence regarding the above-referenced matter.
+
+[NEEDS INPUT: Specific follow-up details]
+
+Please let me know if you have any questions or would like to discuss further.
+
+{{attorney.signature}}`,
+    },
+  ]
+
+  for (const t of emailTemplates) {
+    const existing = await prisma.emailTemplate.findFirst({
+      where: { name: t.name, category: t.category },
+    })
+    if (!existing) {
+      await prisma.emailTemplate.create({
+        data: t,
+      })
+    }
+  }
+  console.log(`  ${emailTemplates.length} email templates`)
 
   console.log('Seed completed!')
 }

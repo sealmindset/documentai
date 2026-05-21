@@ -134,6 +134,7 @@ model Client {
   actionItems        ActionItem[]
   caseContacts       CaseContact[]
   generatedDocuments GeneratedDocument[]
+  outboundEmails     OutboundEmail[]
 
   @@map("clients")
 }
@@ -508,6 +509,53 @@ model GeneratedDocument {
   @@index([clientId])
   @@index([status])
   @@map("generated_documents")
+}
+
+// ============================================
+// OUTBOUND EMAILS (ECHO Agent)
+// ============================================
+
+model OutboundEmail {
+  id                 String    @id @default(cuid())
+  clientId           String
+  recipientContactId String?
+  recipientEmail     String
+  recipientName      String?
+  ccEmails           String?   // JSON array
+  bccEmails          String?   // JSON array
+  subject            String
+  body               String
+  attachmentIds      String?   // JSON array of GeneratedDocument IDs
+  status             String    @default("DRAFT") // DRAFT, PENDING_APPROVAL, APPROVED, SENDING, SENT, FAILED
+  approvedBy         String?
+  approvedAt         DateTime?
+  sentAt             DateTime?
+  sentBy             String?   // "ECHO"
+  messageId          String?   // Graph API message ID for thread tracking
+  errorMessage       String?
+  triggeredBy        String?   // MANUAL, SAGE_PIPELINE, SCHEDULED
+  scheduledFor       DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  client  Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([status])
+  @@map("outbound_emails")
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  body      String
+  category  String   // COURTESY, DISCOVERY_REQUEST, SCHEDULING, FOLLOW_UP
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_templates")
 }
 
 // ============================================

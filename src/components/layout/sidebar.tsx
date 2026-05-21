@@ -22,6 +22,7 @@ import {
   FileStack,
   FilePen,
   FileOutput,
+  Mail,
 } from 'lucide-react'
 
 interface NavItem {
@@ -41,6 +42,7 @@ const navigation: NavItem[] = [
   { name: 'Templates', href: '/templates', icon: FileStack, permission: 'templates.view' },
   { name: 'Generate', href: '/generate', icon: FilePen, permission: 'generated-documents.create' },
   { name: 'Generated Docs', href: '/generated-documents', icon: FileOutput, permission: 'generated-documents.view' },
+  { name: 'Emails', href: '/emails', icon: Mail, permission: 'emails.view' },
   { name: 'Reports', href: '/reports', icon: BarChart3, permission: 'reports.view' },
   { name: 'AI Agents', href: '/agents', icon: Bot, permission: 'agents.view' },
 ]
@@ -134,7 +136,7 @@ export function Sidebar() {
           AI Agents
         </h3>
         <div className="space-y-2">
-          {['LEXA', 'CLARA', 'DORA', 'ARIA', 'RITA', 'ATLAS', 'AURA', 'SAGE'].map((agent) => (
+          {['LEXA', 'CLARA', 'DORA', 'ARIA', 'RITA', 'ATLAS', 'AURA', 'SAGE', 'ECHO'].map((agent) => (
             <div key={agent} className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-green-500" />
               <span className="text-xs text-gray-400">{agent}</span>

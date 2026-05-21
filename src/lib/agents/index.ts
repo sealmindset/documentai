@@ -13,6 +13,7 @@ export { rita, RITAAgent } from './rita'
 export { atlas, ATLASAgent } from './mars'
 export { aura, AURAAgent } from './aura'
 export { sage, SAGEAgent } from './sage'
+export { echo, ECHOAgent } from './echo'
 
 // Orchestrator
 export { orchestrator, AgentOrchestrator } from './orchestrator'
@@ -65,4 +66,10 @@ export { BaseAgent } from './base-agent'
  *   - Generates court documents from templates
  *   - Resolves merge fields from case data
  *   - Manages attorney approval workflow
+ *
+ * ECHO - Email Communications & Handoff Orchestrator
+ *   - Composes outbound emails from templates with case data
+ *   - Manages attorney approval queue before sending
+ *   - Sends via Microsoft Graph API (M365)
+ *   - Attaches SAGE-generated documents to emails
  */

@@ -2,7 +2,7 @@
 
 import type { ModelTier } from '@/lib/ai/provider'
 
-export type AgentName = 'LEXA' | 'CLARA' | 'DORA' | 'ARIA' | 'RITA' | 'ATLAS' | 'AURA' | 'SAGE'
+export type AgentName = 'LEXA' | 'CLARA' | 'DORA' | 'ARIA' | 'RITA' | 'ATLAS' | 'AURA' | 'SAGE' | 'ECHO'
 
 export interface AgentConfig {
   name: AgentName
@@ -259,6 +259,29 @@ export interface DocumentGenerationOutput {
   resolvedFields: Record<string, string>
   unresolvedFields: string[]
   warnings: string[]
+}
+
+// ECHO Types
+export interface EmailComposeInput {
+  clientId: string
+  emailTemplateId?: string
+  recipientContactId?: string
+  recipientEmail?: string
+  recipientName?: string
+  attachmentIds?: string[]
+  overrides?: Record<string, string>
+  triggeredBy?: 'MANUAL' | 'SAGE_PIPELINE' | 'SCHEDULED'
+}
+
+export interface EmailComposeOutput {
+  id: string
+  subject: string
+  body: string
+  recipientEmail: string
+  recipientName: string | null
+  ccEmails: string[]
+  attachmentIds: string[]
+  status: string
 }
 
 export interface MergeFieldContext {
