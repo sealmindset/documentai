@@ -24,7 +24,7 @@ const DORA_CONFIG: AgentConfig = {
 }
 
 interface DocumentRequestOutput {
-  vendorId: string
+  clientId: string
   requestedDocuments: {
     type: string
     priority: string
@@ -37,7 +37,7 @@ interface DocumentRequestOutput {
 }
 
 interface DocumentInventory {
-  vendorId: string
+  clientId: string
   documents: {
     type: string
     status: string
@@ -107,9 +107,9 @@ Always be professional and clear in communications. Reference applicable rules o
     try {
       const prompt = `Create a document request for the following case:
 
-Case ID: ${input.vendorId}
-Case/Client Name: ${input.vendorName}
-Recipient Email: ${input.vendorEmail}
+Case ID: ${input.clientId}
+Case/Client Name: ${input.clientName}
+Recipient Email: ${input.clientEmail}
 Required Documents: ${input.requiredDocuments.join(', ')}
 Due Date: ${input.dueDate.toISOString().split('T')[0]}
 
@@ -120,7 +120,7 @@ Generate:
 
 Provide the response in the following JSON format:
 {
-  "vendorId": "string",
+  "clientId": "string",
   "requestedDocuments": [
     {
       "type": "document type",
@@ -135,18 +135,18 @@ Provide the response in the following JSON format:
 }`
 
       const result = await this.invokeWithJSON<DocumentRequestOutput>(prompt)
-      result.vendorId = input.vendorId
+      result.clientId = input.clientId
 
       // Create document records in database
       for (const doc of result.requestedDocuments) {
         await prisma.document.create({
           data: {
-            vendorId: input.vendorId,
+            clientId: input.clientId,
             documentType: this.mapDocumentType(doc.type),
             documentName: `${doc.type} - Requested`,
             status: 'PENDING',
             retrievedBy: 'DORA',
-            source: 'Vendor Request',
+            source: 'Client Request',
           },
         })
       }
@@ -154,8 +154,8 @@ Provide the response in the following JSON format:
       // Create notification for tracking
       await prisma.notification.create({
         data: {
-          recipientType: 'VENDOR',
-          recipientId: input.vendorId,
+          recipientType: 'CLIENT',
+          recipientId: input.clientId,
           notificationType: 'DOCUMENT_REQUEST',
           title: result.emailSubject,
           message: result.emailBody,
@@ -166,10 +166,10 @@ Provide the response in the following JSON format:
 
       await this.logActivity({
         activityType: 'DOCUMENT_REQUEST',
-        entityType: 'Vendor',
-        entityId: input.vendorId,
+        entityType: 'Client',
+        entityId: input.clientId,
         actionTaken: `Created document request for ${input.requiredDocuments.length} documents`,
-        inputSummary: `Vendor: ${input.vendorName}`,
+        inputSummary: `Client: ${input.clientName}`,
         outputSummary: `Requested: ${input.requiredDocuments.join(', ')}`,
         status: 'SUCCESS',
         processingTimeMs: Date.now() - startTime,
@@ -181,8 +181,8 @@ Provide the response in the following JSON format:
 
       await this.logActivity({
         activityType: 'DOCUMENT_REQUEST',
-        entityType: 'Vendor',
-        entityId: input.vendorId,
+        entityType: 'Client',
+        entityId: input.clientId,
         status: 'FAILED',
         errorMessage,
         processingTimeMs: Date.now() - startTime,
@@ -192,23 +192,23 @@ Provide the response in the following JSON format:
     }
   }
 
-  async checkDocumentInventory(vendorId: string): Promise<AgentResult<DocumentInventory>> {
+  async checkDocumentInventory(clientId: string): Promise<AgentResult<DocumentInventory>> {
     const startTime = Date.now()
 
     try {
-      // Get all documents for vendor
+      // Get all documents for client
       const documents = await prisma.document.findMany({
-        where: { vendorId },
+        where: { clientId },
         orderBy: { uploadDate: 'desc' },
       })
 
-      // Get vendor risk profile for required documents
-      const riskProfile = await prisma.riskProfile.findFirst({
-        where: { vendorId },
+      // Get client profile for required documents
+      const clientProfile = await prisma.clientProfile.findFirst({
+        where: { clientId },
         orderBy: { createdAt: 'desc' },
       })
 
-      const requiredDocs = this.getRequiredDocuments(riskProfile?.riskTier || 'MEDIUM')
+      const requiredDocs = this.getRequiredDocuments(clientProfile?.priorityTier || 'MEDIUM')
 
       const documentStatus = documents.map((doc) => ({
         type: doc.documentType,
@@ -231,7 +231,7 @@ Provide the response in the following JSON format:
         : 100
 
       const result: DocumentInventory = {
-        vendorId,
+        clientId,
         documents: documentStatus,
         overallCompletenessScore: overallScore,
         missingDocuments,
@@ -240,8 +240,8 @@ Provide the response in the following JSON format:
 
       await this.logActivity({
         activityType: 'INVENTORY_CHECK',
-        entityType: 'Vendor',
-        entityId: vendorId,
+        entityType: 'Client',
+        entityId: clientId,
         actionTaken: 'Checked document inventory',
         outputSummary: `Completeness: ${overallScore}%, Missing: ${missingDocuments.length}`,
         status: 'SUCCESS',
@@ -255,8 +255,8 @@ Provide the response in the following JSON format:
     }
   }
 
-  private getRequiredDocuments(riskTier: string): string[] {
-    switch (riskTier) {
+  private getRequiredDocuments(priorityTier: string): string[] {
+    switch (priorityTier) {
       case 'CRITICAL':
         return [
           'POLICE_REPORT',

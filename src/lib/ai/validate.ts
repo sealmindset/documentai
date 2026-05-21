@@ -93,25 +93,25 @@ export function validateAgentOutput(
 
 // Common validation rules for Document AI agent outputs
 
-export const RISK_SCORE_RULES: ValidationRule[] = [
-  { field: 'overallRiskScore', type: 'number', min: 1, max: 100 },
-  { field: 'riskTier', type: 'enum', enumValues: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] },
+export const REVIEW_SCORE_RULES: ValidationRule[] = [
+  { field: 'overallReviewScore', type: 'number', min: 1, max: 100 },
+  { field: 'priorityTier', type: 'enum', enumValues: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] },
 ]
 
-export const ASSESSMENT_SCORE_RULES: ValidationRule[] = [
-  { field: 'securityRiskScore', type: 'number', min: 1, max: 5 },
-  { field: 'operationalRiskScore', type: 'number', min: 1, max: 5 },
-  { field: 'complianceRiskScore', type: 'number', min: 1, max: 5 },
-  { field: 'financialRiskScore', type: 'number', min: 1, max: 5 },
-  { field: 'reputationalRiskScore', type: 'number', min: 1, max: 5 },
-  { field: 'strategicRiskScore', type: 'number', min: 1, max: 5 },
-  { field: 'overallAssessmentScore', type: 'number', min: 1, max: 5 },
-  { field: 'riskRating', type: 'enum', enumValues: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] },
+export const CASE_REVIEW_SCORE_RULES: ValidationRule[] = [
+  { field: 'securityScore', type: 'number', min: 1, max: 5 },
+  { field: 'operationalScore', type: 'number', min: 1, max: 5 },
+  { field: 'complianceScore', type: 'number', min: 1, max: 5 },
+  { field: 'financialScore', type: 'number', min: 1, max: 5 },
+  { field: 'reputationalScore', type: 'number', min: 1, max: 5 },
+  { field: 'strategicScore', type: 'number', min: 1, max: 5 },
+  { field: 'overallReviewScore', type: 'number', min: 1, max: 5 },
+  { field: 'reviewRating', type: 'enum', enumValues: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] },
   { field: 'summary', type: 'string', required: true, maxLength: 10000 },
   { field: 'recommendations', type: 'string', maxLength: 10000 },
 ]
 
-export const FINDING_RULES: ValidationRule[] = [
+export const ISSUE_RULES: ValidationRule[] = [
   { field: 'severity', type: 'enum', required: true, enumValues: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFORMATIONAL'] },
   { field: 'title', type: 'string', required: true, maxLength: 500 },
   { field: 'description', type: 'string', maxLength: 10000 },

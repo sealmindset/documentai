@@ -12,6 +12,7 @@ export { aria, ARIAAgent } from './sara'
 export { rita, RITAAgent } from './rita'
 export { atlas, ATLASAgent } from './mars'
 export { aura, AURAAgent } from './aura'
+export { sage, SAGEAgent } from './sage'
 
 // Orchestrator
 export { orchestrator, AgentOrchestrator } from './orchestrator'
@@ -59,4 +60,9 @@ export { BaseAgent } from './base-agent'
  *   - Extracts party info from uploaded documents
  *   - Classifies document types and assesses priority
  *   - Compares document similarity for deduplication
+ *
+ * SAGE - Structured Assembly & Generation Engine
+ *   - Generates court documents from templates
+ *   - Resolves merge fields from case data
+ *   - Manages attorney approval workflow
  */

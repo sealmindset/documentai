@@ -7,7 +7,7 @@ import prisma from '@/lib/db'
 import { z } from 'zod'
 
 const onboardRequestSchema = z.object({
-  vendorId: z.string().max(100),
+  clientId: z.string().max(100),
   dataTypesAccessed: z.array(z.string().max(255)).default([]),
   systemIntegrations: z.array(z.string().max(255)).default([]),
   hasPiiAccess: z.boolean().default(false),
@@ -22,12 +22,12 @@ const onboardRequestSchema = z.object({
 })
 
 const documentProcessSchema = z.object({
-  vendorId: z.string().max(100),
+  clientId: z.string().max(100),
   documentId: z.string().max(100),
   documentContent: z.string().max(500000).optional(),
 })
 
-// Full vendor onboarding workflow
+// Full client onboarding workflow
 export async function POST(request: NextRequest) {
   const denied = await requirePermission('agents', 'create')
   if (denied) return denied
@@ -43,27 +43,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = onboardRequestSchema.parse(body)
 
-    // Get vendor info
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: validated.vendorId },
+    // Get client info
+    const client = await prisma.client.findUnique({
+      where: { id: validated.clientId },
     })
 
-    if (!vendor) {
-      return NextResponse.json({ error: 'Vendor not found' }, { status: 404 })
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
     // Execute full onboarding workflow
-    const result = await orchestrator.onboardVendor({
-      vendorId: validated.vendorId,
-      vendorName: vendor.name,
-      industry: vendor.industry || undefined,
+    const result = await orchestrator.onboardClient({
+      clientId: validated.clientId,
+      clientName: client.name,
+      industry: client.industry || undefined,
       dataTypesAccessed: validated.dataTypesAccessed,
       systemIntegrations: validated.systemIntegrations,
       hasPiiAccess: validated.hasPiiAccess,
       hasPhiAccess: validated.hasPhiAccess,
       hasPciAccess: validated.hasPciAccess,
       businessCriticality: validated.businessCriticality,
-      annualSpend: vendor.annualSpend ? Number(vendor.annualSpend) : undefined,
+      annualSpend: client.annualSpend ? Number(client.annualSpend) : undefined,
     })
 
     return NextResponse.json({
@@ -114,7 +114,7 @@ export async function PUT(request: NextRequest) {
       `Document: ${document.documentName}\nType: ${document.documentType}`
 
     const result = await orchestrator.processDocument(
-      validated.vendorId,
+      validated.clientId,
       validated.documentId,
       document.documentType,
       content

@@ -14,7 +14,7 @@ export interface ReportDownloadData {
   reportName: string
   reportType: string
   content: string
-  vendorName?: string
+  clientName?: string
   generatedBy?: string
   generatedDate: string
   status: string
@@ -92,7 +92,7 @@ async function downloadPDF(data: ReportDownloadData, filename: string) {
   doc.setTextColor(120, 120, 120)
   const meta = [
     data.reportType.replace(/_/g, ' '),
-    data.vendorName || 'Portfolio-wide',
+    data.clientName || 'Portfolio-wide',
     `Generated ${new Date(data.generatedDate).toLocaleDateString()}`,
     data.generatedBy ? `by ${data.generatedBy}` : '',
   ]
@@ -153,7 +153,7 @@ async function downloadDOCX(data: ReportDownloadData, filename: string) {
   // Metadata
   const meta = [
     data.reportType.replace(/_/g, ' '),
-    data.vendorName || 'Portfolio-wide',
+    data.clientName || 'Portfolio-wide',
     `Generated ${new Date(data.generatedDate).toLocaleDateString()}`,
     data.generatedBy ? `by ${data.generatedBy}` : '',
   ]
@@ -207,7 +207,7 @@ function downloadMarkdown(data: ReportDownloadData, filename: string) {
     `# ${data.reportName}`,
     '',
     `**Type:** ${data.reportType.replace(/_/g, ' ')}`,
-    data.vendorName ? `**Vendor:** ${data.vendorName}` : '**Scope:** Portfolio-wide',
+    data.clientName ? `**Client:** ${data.clientName}` : '**Scope:** Portfolio-wide',
     `**Generated:** ${new Date(data.generatedDate).toLocaleDateString()}${data.generatedBy ? ` by ${data.generatedBy}` : ''}`,
     `**Status:** ${data.status}`,
     '',
@@ -225,7 +225,7 @@ function downloadJSON(data: ReportDownloadData, filename: string) {
   const output = {
     reportName: data.reportName,
     reportType: data.reportType,
-    vendor: data.vendorName || null,
+    client: data.clientName || null,
     generatedBy: data.generatedBy || null,
     generatedDate: data.generatedDate,
     status: data.status,
@@ -252,7 +252,7 @@ function downloadXML(data: ReportDownloadData, filename: string) {
     '<report>',
     `  <reportName>${escapeXml(data.reportName)}</reportName>`,
     `  <reportType>${escapeXml(data.reportType)}</reportType>`,
-    `  <vendor>${escapeXml(data.vendorName || '')}</vendor>`,
+    `  <client>${escapeXml(data.clientName || '')}</client>`,
     `  <generatedBy>${escapeXml(data.generatedBy || '')}</generatedBy>`,
     `  <generatedDate>${escapeXml(data.generatedDate)}</generatedDate>`,
     `  <status>${escapeXml(data.status)}</status>`,

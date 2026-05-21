@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, Users } from 'lucide-react'
 
-interface Vendor {
+interface Client {
   id: string
   name: string
   status: string
@@ -27,21 +27,21 @@ function getStatusBadge(status: string) {
 
 export default function CaseloadPage() {
   const router = useRouter()
-  const [vendors, setVendors] = useState<Vendor[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/vendors')
-      .then((r) => r.ok ? r.json() : { vendors: [] })
+    fetch('/api/clients')
+      .then((r) => r.ok ? r.json() : { clients: [] })
       .then((d) => {
-        const all = d.vendors || d
-        setVendors(all.filter((v: Vendor) => v.status !== 'CLOSED'))
+        const all = d.clients || d
+        setClients(all.filter((v: Client) => v.status !== 'CLOSED'))
       })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
-  const columns: Column<Vendor>[] = [
+  const columns: Column<Client>[] = [
     {
       key: 'businessOwner', header: 'Lead Attorney', sortable: true, filterable: true,
       render: (row) => row.businessOwner || '—',
@@ -77,10 +77,10 @@ export default function CaseloadPage() {
         <CardContent className="pt-6">
           <DataTable
             columns={columns}
-            data={vendors}
+            data={clients}
             loading={loading}
             searchPlaceholder="Search by attorney or case..."
-            onRowClick={(row) => router.push(`/parties/${row.id}`)}
+            onRowClick={(row) => router.push(`/clients/${row.id}`)}
           />
         </CardContent>
       </Card>

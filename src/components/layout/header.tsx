@@ -16,7 +16,7 @@ export function Header() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
-            placeholder="Search parties, issues..."
+            placeholder="Search clients, issues..."
             className="pl-9 bg-gray-50 border-gray-200"
           />
         </div>

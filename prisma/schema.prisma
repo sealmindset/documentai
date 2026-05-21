@@ -32,7 +32,7 @@ model Role {
 
 model Permission {
   id          String  @id @default(cuid())
-  resource    String // e.g., "vendors", "findings", "users"
+  resource    String // e.g., "clients", "issues", "users"
   action      String // "view", "create", "edit", "delete"
   description String?
 
@@ -79,10 +79,10 @@ model User {
 }
 
 // ============================================
-// VENDOR MANAGEMENT
+// CLIENT MANAGEMENT
 // ============================================
 
-model Vendor {
+model Client {
   id                  String    @id @default(cuid())
   name                String
   legalName           String?
@@ -100,30 +100,53 @@ model Vendor {
   contractEndDate     DateTime?
   annualSpend         Decimal?
   status              String    @default("ACTIVE") // ACTIVE, INACTIVE, PENDING, TERMINATED
+
+  // Criminal Defense Case Fields
+  caseNumber        String?   // Court case number (e.g., "49D01-2026-F6-012345")
+  caseType          String?   // FELONY, MISDEMEANOR, INFRACTION, JUVENILE, FEDERAL
+  charges           String?   // JSON array of charge descriptions
+  chargeStatutes    String?   // JSON array of statute numbers
+  arrestDate        DateTime?
+  bondAmount        Decimal?
+  bondType          String?   // CASH, SURETY, OWN_RECOGNIZANCE, NO_BOND
+  nextHearingDate   DateTime?
+  nextHearingType   String?   // INITIAL, PRETRIAL, OMNIBUS, SUPPRESSION, JURY_TRIAL, BENCH_TRIAL, SENTENCING
+  trialDate         DateTime?
+  disposition       String?   // PENDING, DISMISSED, ACQUITTED, GUILTY_PLEA, GUILTY_VERDICT, DIVERTED
+  dispositionDate   DateTime?
+
+  // Court Information
+  courtName         String?   // "Marion County Superior Court"
+  courtAddress      String?
+  courtCounty       String?
+  courtDivision     String?   // "Criminal Division 1"
+  courtPhone        String?
+
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
   // Relations
-  riskProfiles       RiskProfile[]
-  riskAssessments    RiskAssessment[]
+  clientProfiles     ClientProfile[]
+  caseReviews        CaseReview[]
   documents          Document[]
-  riskFindings       RiskFinding[]
+  issues             Issue[]
   reports            Report[]
-  remediationActions RemediationAction[]
+  actionItems        ActionItem[]
   caseContacts       CaseContact[]
+  generatedDocuments GeneratedDocument[]
 
-  @@map("vendors")
+  @@map("clients")
 }
 
 // ============================================
-// RISK PROFILES
+// CLIENT PROFILES
 // ============================================
 
-model RiskProfile {
+model ClientProfile {
   id                   String    @id @default(cuid())
-  vendorId             String
-  riskTier             String // CRITICAL, HIGH, MEDIUM, LOW
-  overallRiskScore     Int? // 1-100
+  clientId             String
+  priorityTier         String // CRITICAL, HIGH, MEDIUM, LOW
+  overallReviewScore   Int? // 1-100
   dataSensitivityLevel String?
   dataTypesAccessed    String? // JSON string array
   systemIntegrations   String? // JSON string array
@@ -134,52 +157,52 @@ model RiskProfile {
   assessmentFrequency  String?
   lastAssessmentDate   DateTime?
   nextAssessmentDate   DateTime?
-  calculatedBy         String? // Agent name (VERA)
+  calculatedBy         String? // Agent name (LEXA)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
   // Relations
-  vendor          Vendor           @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  riskAssessments RiskAssessment[]
+  client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  caseReviews CaseReview[]
 
-  @@map("risk_profiles")
+  @@map("client_profiles")
 }
 
 // ============================================
-// RISK ASSESSMENTS
+// CASE REVIEWS
 // ============================================
 
-model RiskAssessment {
+model CaseReview {
   id               String    @id @default(cuid())
-  vendorId         String
-  riskProfileId    String?
+  clientId         String
+  clientProfileId  String?
   assessmentType   String // INITIAL, ANNUAL, TRIGGERED, RENEWAL
   assessmentStatus String    @default("DRAFT") // DRAFT, IN_PROGRESS, PENDING_REVIEW, COMPLETE, APPROVED
-  assessedBy       String? // Agent name (CARA)
+  assessedBy       String? // Agent name (CLARA)
   assessmentDate   DateTime?
 
-  // Risk Category Scores (1-5)
-  securityRiskScore     Int?
-  operationalRiskScore  Int?
-  complianceRiskScore   Int?
-  financialRiskScore    Int?
-  reputationalRiskScore Int?
-  strategicRiskScore    Int?
+  // Review Category Scores (1-5)
+  securityScore     Int?
+  operationalScore  Int?
+  complianceScore   Int?
+  financialScore    Int?
+  reputationalScore Int?
+  strategicScore    Int?
 
-  overallAssessmentScore Int?
-  riskRating             String? // CRITICAL, HIGH, MEDIUM, LOW
-  summary                String?
-  recommendations        String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  overallReviewScore Int?
+  reviewRating       String? // CRITICAL, HIGH, MEDIUM, LOW
+  summary            String?
+  recommendations    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   // Relations
-  vendor       Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  riskProfile  RiskProfile?  @relation(fields: [riskProfileId], references: [id])
-  riskFindings RiskFinding[]
-  reports      Report[]
+  client        Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientProfile ClientProfile? @relation(fields: [clientProfileId], references: [id])
+  issues        Issue[]
+  reports       Report[]
 
-  @@map("risk_assessments")
+  @@map("case_reviews")
 }
 
 // ============================================
@@ -188,7 +211,7 @@ model RiskAssessment {
 
 model Document {
   id             String    @id @default(cuid())
-  vendorId       String
+  clientId       String
   documentType   String // SOC2_TYPE1, SOC2_TYPE2, ISO27001, PENTEST, etc.
   documentName   String
   filePath       String?
@@ -206,22 +229,22 @@ model Document {
   createdAt      DateTime  @default(now())
 
   // Relations
-  vendor       Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  riskFindings RiskFinding[]
+  client Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  issues Issue[]
 
   @@map("documents")
 }
 
 // ============================================
-// RISK FINDINGS
+// ISSUES
 // ============================================
 
-model RiskFinding {
+model Issue {
   id               String    @id @default(cuid())
-  vendorId         String
-  assessmentId     String?
+  clientId         String
+  caseReviewId     String?
   documentId       String?
-  findingId        String? // External finding ID (e.g., AG-2026-001)
+  issueCode        String? // External issue ID (e.g., AG-2026-001)
   findingType      String?
   findingCategory  String?
   severity         String // CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
@@ -231,7 +254,7 @@ model RiskFinding {
   snbrRiskMapping  String?
   affectedControls String? // JSON string array
   sourceReference  String?
-  identifiedBy     String? // Agent name (SARA)
+  identifiedBy     String? // Agent name (ARIA)
   identifiedDate   DateTime  @default(now())
   status           String    @default("OPEN") // OPEN, IN_REMEDIATION, PENDING_VERIFICATION, RESOLVED, ACCEPTED, CLOSED
   dueDate          DateTime?
@@ -239,12 +262,12 @@ model RiskFinding {
   updatedAt        DateTime  @updatedAt
 
   // Relations
-  vendor             Vendor              @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  assessment         RiskAssessment?     @relation(fields: [assessmentId], references: [id])
-  document           Document?           @relation(fields: [documentId], references: [id])
-  remediationActions RemediationAction[]
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  caseReview  CaseReview? @relation(fields: [caseReviewId], references: [id])
+  document    Document?   @relation(fields: [documentId], references: [id])
+  actionItems ActionItem[]
 
-  @@map("risk_findings")
+  @@map("issues")
 }
 
 // ============================================
@@ -253,8 +276,8 @@ model RiskFinding {
 
 model Report {
   id            String    @id @default(cuid())
-  vendorId      String?
-  assessmentId  String?
+  clientId      String?
+  caseReviewId  String?
   reportType    String // EXECUTIVE_SUMMARY, DETAILED_ASSESSMENT, COMPLIANCE_STATUS, etc.
   reportName    String
   generatedBy   String? // Agent name (RITA)
@@ -267,20 +290,20 @@ model Report {
   createdAt     DateTime  @default(now())
 
   // Relations
-  vendor     Vendor?         @relation(fields: [vendorId], references: [id])
-  assessment RiskAssessment? @relation(fields: [assessmentId], references: [id])
+  client     Client?     @relation(fields: [clientId], references: [id])
+  caseReview CaseReview? @relation(fields: [caseReviewId], references: [id])
 
   @@map("reports")
 }
 
 // ============================================
-// REMEDIATION ACTIONS
+// ACTION ITEMS
 // ============================================
 
-model RemediationAction {
+model ActionItem {
   id                String    @id @default(cuid())
-  findingId         String
-  vendorId          String
+  issueId           String
+  clientId          String
   actionType        String // REMEDIATE, MITIGATE, ACCEPT, TRANSFER
   title             String
   description       String?
@@ -290,16 +313,16 @@ model RemediationAction {
   status            String    @default("OPEN") // OPEN, IN_PROGRESS, PENDING_VERIFICATION, VERIFIED, CLOSED, OVERDUE
   dueDate           DateTime?
   completionDate    DateTime?
-  managedBy         String? // Agent name (MARS)
+  managedBy         String? // Agent name (ATLAS)
   verificationNotes String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   // Relations
-  finding RiskFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
-  vendor  Vendor      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  issue  Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  @@map("remediation_actions")
+  @@map("action_items")
 }
 
 // ============================================
@@ -353,16 +376,16 @@ model ContactEmail {
 
 model CaseContact {
   id        String   @id @default(cuid())
-  vendorId  String
+  clientId  String
   contactId String
   role      String // OPPOSING_COUNSEL, PROSECUTOR, CO_COUNSEL, WITNESS, EXPERT_WITNESS, JUDGE, COURT_CLERK, CLIENT, GUARDIAN_AD_LITEM, MEDIATOR, INSURANCE_ADJUSTER
   notes     String?
   createdAt DateTime @default(now())
 
-  vendor  Vendor  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  client  Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
-  @@unique([vendorId, contactId, role])
+  @@unique([clientId, contactId, role])
   @@map("case_contacts")
 }
 
@@ -372,7 +395,7 @@ model CaseContact {
 
 model AgentActivityLog {
   id               String   @id @default(cuid())
-  agentName        String // VERA, CARA, DORA, SARA, RITA, MARS
+  agentName        String // LEXA, CLARA, DORA, ARIA, RITA, ATLAS
   activityType     String
   entityType       String?
   entityId         String?
@@ -436,6 +459,58 @@ model AuditTrail {
 }
 
 // ============================================
+// DOCUMENT TEMPLATES & GENERATION (SAGE)
+// ============================================
+
+model DocumentTemplate {
+  id             String   @id @default(cuid())
+  name           String
+  category       String   // PLEADING, CORRESPONDENCE, MOTION, NOTICE, DISCOVERY
+  subcategory    String?
+  jurisdiction   String?  // "MN", "IN", "Federal"
+  courtType      String?  // CIRCUIT, SUPERIOR, DISTRICT, FEDERAL_DISTRICT
+  content        String   // Template body with {{placeholders}}
+  format         String   @default("DOCX") // DOCX, PDF, TXT
+  requiredFields String?  // JSON array of required merge field paths
+  isActive       Boolean  @default(true)
+  createdBy      String?
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  generatedDocs GeneratedDocument[]
+
+  @@index([category])
+  @@map("document_templates")
+}
+
+model GeneratedDocument {
+  id              String    @id @default(cuid())
+  templateId      String
+  clientId        String
+  documentName    String
+  mergeData       String    // JSON of resolved field values
+  content         String?   // Generated content (HTML or plain text)
+  filePath        String?   // Path to rendered file
+  status          String    @default("DRAFT") // DRAFT, PENDING_REVIEW, APPROVED, SENT, FILED
+  generatedBy     String?   // "SAGE"
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  sentTo          String?   // Recipient contact ID
+  sentAt          DateTime?
+  filedAt         DateTime?
+  courtCaseNumber String?
+  createdAt       DateTime  @default(now())
+
+  template DocumentTemplate @relation(fields: [templateId], references: [id])
+  client   Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([status])
+  @@map("generated_documents")
+}
+
+// ============================================
 // APPLICATION SETTINGS
 // ============================================
 
@@ -482,7 +557,7 @@ model ManagedPrompt {
   name        String // Human-readable name
   description String?
   category    String // "system" | "user" | "template"
-  agentName   String? // VERA, CARA, DORA, SARA, RITA, MARS
+  agentName   String? // LEXA, CLARA, DORA, ARIA, RITA, ATLAS
   content     String // Current prompt text
   model       String? // Model tier: complex, standard, simple
   temperature Float?

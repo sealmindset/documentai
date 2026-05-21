@@ -7,7 +7,7 @@ An AI-powered Legal Document Intelligence platform for Vanmerven Law Firm (VLF),
 This project integrates AI capabilities with legal document management to streamline document review operations:
 
 - **Document Reviews**: Automated document analysis and review workflows
-- **Compliance Monitoring**: Continuous monitoring of party compliance
+- **Compliance Monitoring**: Continuous monitoring of client compliance
 - **Issue Tracking**: AI-identified issues with action item management
 - **Evidence Collection**: Automated evidence gathering and documentation
 
@@ -31,8 +31,8 @@ This project integrates AI capabilities with legal document management to stream
 
 | Agent | Full Name | Purpose | Tier |
 |-------|-----------|---------|------|
-| **LEXA** | Legal Examination & Assessment Agent | Party profiling, priority tier calculation | standard |
-| **CLARA** | Comprehensive Legal Analysis & Review Agent | Deep-dive document reviews | complex |
+| **LEXA** | Legal Examination & Assessment Agent | Client profiling, priority tier calculation | standard |
+| **CLARA** | Comprehensive Legal Analysis & Review Agent | Deep-dive case reviews | complex |
 | **DORA** | Documentation & Outreach Retrieval Agent | Document collection and tracking | simple |
 | **ARIA** | Automated Review, Identification & Analysis Agent | Document analysis, issue identification | complex |
 | **RITA** | Report Intelligence & Threat Assessment Agent | Report generation, executive summaries | standard |
@@ -41,24 +41,28 @@ This project integrates AI capabilities with legal document management to stream
 
 Pipeline: LEXA → CLARA → DORA → ARIA → RITA → ATLAS
 
-## UI Label Mapping (DB schema unchanged)
+## Data Model
 
-| Database Entity | UI Label |
-|----------------|----------|
-| Vendor | Party |
-| Risk Profile | Party Profile |
-| Risk Assessment | Document Review |
-| Risk Finding | Issue |
-| Remediation Action | Action Item |
-| Risk Score | Review Score |
-| Risk Tier | Priority Tier |
+| Model | Table | Purpose |
+|-------|-------|---------|
+| Client | `clients` | Legal cases/matters |
+| ClientProfile | `client_profiles` | Case priority and data sensitivity profiles |
+| CaseReview | `case_reviews` | Multi-dimensional case strength assessments |
+| Issue | `issues` | AI-identified legal issues and findings |
+| ActionItem | `action_items` | Court deadlines and remediation tasks |
+| Document | `documents` | Legal documents and evidence |
+| Report | `reports` | AI-generated case reports |
 
 ## Project Structure
 
 ```
-TPRMAI/
+docai/
 ├── src/
 │   ├── app/                     # Next.js pages and API routes
+│   │   ├── api/clients/         # Client CRUD API
+│   │   ├── api/case-reviews/    # Case review API
+│   │   ├── api/issues/          # Issues API
+│   │   └── (authenticated)/clients/  # Client pages
 │   ├── components/              # UI components (Radix + Tailwind)
 │   ├── lib/
 │   │   ├── ai/                  # AI provider abstraction + safety controls

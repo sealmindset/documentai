@@ -134,7 +134,7 @@ export function hasPermission(
 /**
  * Check permission and return 403 response if denied.
  * Use in API route handlers:
- *   const denied = await requirePermission('vendors', 'view')
+ *   const denied = await requirePermission('clients', 'view')
  *   if (denied) return denied
  */
 export async function requirePermission(

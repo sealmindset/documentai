@@ -2,7 +2,7 @@
 
 import type { ModelTier } from '@/lib/ai/provider'
 
-export type AgentName = 'LEXA' | 'CLARA' | 'DORA' | 'ARIA' | 'RITA' | 'ATLAS' | 'AURA'
+export type AgentName = 'LEXA' | 'CLARA' | 'DORA' | 'ARIA' | 'RITA' | 'ATLAS' | 'AURA' | 'SAGE'
 
 export interface AgentConfig {
   name: AgentName
@@ -35,9 +35,9 @@ export interface AgentLogEntry {
 }
 
 // LEXA Types
-export interface VendorProfileInput {
-  vendorId: string
-  vendorName: string
+export interface ClientProfileInput {
+  clientId: string
+  clientName: string
   industry?: string
   dataTypesAccessed: string[]
   systemIntegrations: string[]
@@ -49,10 +49,10 @@ export interface VendorProfileInput {
   additionalContext?: string
 }
 
-export interface VendorProfileOutput {
-  vendorId: string
-  riskTier: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
-  overallRiskScore: number
+export interface ClientProfileOutput {
+  clientId: string
+  priorityTier: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
+  overallReviewScore: number
   dataSensitivityLevel: string
   assessmentFrequency: string
   nextAssessmentDate: Date
@@ -61,29 +61,29 @@ export interface VendorProfileOutput {
 }
 
 // CLARA Types
-export interface AssessmentInput {
-  vendorId: string
-  riskProfileId: string
+export interface CaseReviewInput {
+  clientId: string
+  clientProfileId: string
   assessmentType: 'INITIAL' | 'ANNUAL' | 'TRIGGERED' | 'RENEWAL'
-  vendorInfo: {
+  clientInfo: {
     name: string
     industry: string
     country: string
     annualSpend: number
   }
-  existingFindings?: string[]
+  existingIssues?: string[]
 }
 
-export interface AssessmentOutput {
-  vendorId: string
-  securityRiskScore: number
-  operationalRiskScore: number
-  complianceRiskScore: number
-  financialRiskScore: number
-  reputationalRiskScore: number
-  strategicRiskScore: number
+export interface CaseReviewOutput {
+  clientId: string
+  securityScore: number
+  operationalScore: number
+  complianceScore: number
+  financialScore: number
+  reputationalScore: number
+  strategicScore: number
   overallScore: number
-  riskRating: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
+  reviewRating: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
   summary: string
   recommendations: string[]
   requiredDocuments: string[]
@@ -91,9 +91,9 @@ export interface AssessmentOutput {
 
 // DORA Types
 export interface DocumentRequestInput {
-  vendorId: string
-  vendorEmail: string
-  vendorName: string
+  clientId: string
+  clientEmail: string
+  clientName: string
   requiredDocuments: string[]
   dueDate: Date
 }
@@ -106,13 +106,13 @@ export interface DocumentAnalysisRequest {
 
 // ARIA Types
 export interface SecurityAnalysisInput {
-  vendorId: string
+  clientId: string
   documentId: string
   documentType: string
   documentContent: string
-  vendorContext: {
+  clientContext: {
     name: string
-    riskTier: string
+    priorityTier: string
     dataAccess: string[]
   }
 }
@@ -129,20 +129,20 @@ export interface SecurityFinding {
 }
 
 export interface SecurityAnalysisOutput {
-  vendorId: string
+  clientId: string
   documentId: string
   findings: SecurityFinding[]
-  overallRiskAssessment: string
+  overallReviewAssessment: string
   complianceGaps: string[]
   strengthAreas: string[]
 }
 
 // RITA Types
 export interface ReportInput {
-  vendorId?: string
-  assessmentId?: string
+  clientId?: string
+  caseReviewId?: string
   reportType: 'EXECUTIVE_SUMMARY' | 'DETAILED_ASSESSMENT' | 'COMPLIANCE_STATUS' | 'TREND_ANALYSIS' | 'PORTFOLIO_OVERVIEW'
-  includeFindings: boolean
+  includeIssues: boolean
   includeTrends: boolean
   dateRange?: {
     start: Date
@@ -160,22 +160,22 @@ export interface ReportOutput {
 }
 
 // ATLAS Types
-export interface RemediationInput {
-  findingId: string
-  vendorId: string
-  finding: {
+export interface ActionItemInput {
+  issueId: string
+  clientId: string
+  issue: {
     title: string
     severity: string
     description: string
   }
-  vendorContact: {
+  clientContact: {
     name: string
     email: string
   }
 }
 
-export interface RemediationPlan {
-  findingId: string
+export interface ActionItemPlan {
+  issueId: string
   actions: {
     title: string
     description: string
@@ -183,7 +183,7 @@ export interface RemediationPlan {
     priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
     dueDate: Date
     assignedTo: string
-    ownerType: 'VENDOR' | 'INTERNAL'
+    ownerType: 'CLIENT' | 'INTERNAL'
   }[]
   timeline: string
   escalationPath: string[]
@@ -199,7 +199,7 @@ export interface DocumentExtractionInput {
 }
 
 export interface DocumentExtractionOutput {
-  vendorInfo: {
+  clientInfo: {
     name: string | null
     legalName: string | null
     dunsNumber: string | null
@@ -242,4 +242,31 @@ export interface DocumentComparisonOutput {
   similarity: 'identical' | 'updated' | 'different'
   confidence: number
   explanation: string
+}
+
+// SAGE Types
+export interface DocumentGenerationInput {
+  clientId: string
+  templateId: string
+  overrides?: Record<string, string>
+  outputFormat?: 'DOCX' | 'PDF' | 'TXT'
+}
+
+export interface DocumentGenerationOutput {
+  documentName: string
+  content: string
+  resolvedFields: Record<string, string>
+  unresolvedFields: string[]
+  warnings: string[]
+}
+
+export interface MergeFieldContext {
+  client: Record<string, string | null>
+  defendant: Record<string, string | null>
+  court: Record<string, string | null>
+  judge: Record<string, string | null>
+  prosecutor: Record<string, string | null>
+  attorney: Record<string, string | null>
+  dates: Record<string, string | null>
+  case: Record<string, string | null>
 }

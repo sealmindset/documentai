@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requirePermission } from '@/lib/auth'
-import { findVendorMatches, type ExtractedVendorInfo } from '@/lib/vendors/dedup'
+import { findClientMatches, type ExtractedClientInfo } from '@/lib/clients/dedup'
 import { sanitizeAIError } from '@/lib/ai/errors'
 import { aura } from '@/lib/agents'
 
@@ -23,37 +23,37 @@ interface DocumentComparison {
 }
 
 export async function POST(request: Request) {
-  const denied = await requirePermission('vendors', 'view')
+  const denied = await requirePermission('clients', 'view')
   if (denied) return denied
 
   try {
     const body = await request.json()
-    const vendorInfo: ExtractedVendorInfo = body.vendorInfo
+    const clientInfo: ExtractedClientInfo = body.clientInfo
     const documents: DocumentSnippet[] = body.documents || []
 
-    if (!vendorInfo || !vendorInfo.name) {
+    if (!clientInfo || !clientInfo.name) {
       return NextResponse.json(
-        { error: 'vendorInfo with at least a name is required' },
+        { error: 'clientInfo with at least a name is required' },
         { status: 400 }
       )
     }
 
-    // Find vendor matches using multi-point dedup
-    const matches = await findVendorMatches(vendorInfo)
+    // Find client matches using multi-point dedup
+    const matches = await findClientMatches(clientInfo)
 
     // For each match, compare uploaded documents against existing via AURA
     const matchesWithComparisons = await Promise.all(
       matches.map(async (match) => {
         const documentComparisons: DocumentComparison[] = []
 
-        if (match.vendor.documents.length > 0 && documents.length > 0) {
+        if (match.client.documents.length > 0 && documents.length > 0) {
           for (const newDoc of documents) {
-            const existingCandidates = match.vendor.documents.filter(
+            const existingCandidates = match.client.documents.filter(
               (ed) => ed.documentType === newDoc.documentType
             )
             const toCompare = existingCandidates.length > 0
               ? existingCandidates
-              : match.vendor.documents.slice(0, 3)
+              : match.client.documents.slice(0, 3)
 
             for (const existingDoc of toCompare) {
               let existingSnippet = ''
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
         }
 
         return {
-          vendor: match.vendor,
+          client: match.client,
           matchType: match.matchType,
           matchPoints: match.matchPoints,
           overallConfidence: match.overallConfidence,

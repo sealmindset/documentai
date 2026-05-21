@@ -7,7 +7,7 @@ import prisma from '@/lib/db'
 import { z } from 'zod'
 
 const assessmentRequestSchema = z.object({
-  vendorId: z.string(),
+  clientId: z.string(),
   assessmentType: z.enum(['INITIAL', 'ANNUAL', 'TRIGGERED', 'RENEWAL']),
 })
 
@@ -26,27 +26,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = assessmentRequestSchema.parse(body)
 
-    // Get vendor and risk profile
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: validated.vendorId },
+    // Get client and client profile
+    const client = await prisma.client.findUnique({
+      where: { id: validated.clientId },
       include: {
-        riskProfiles: {
+        clientProfiles: {
           orderBy: { createdAt: 'desc' },
           take: 1,
         },
-        riskFindings: {
+        issues: {
           where: { status: { not: 'CLOSED' } },
           select: { title: true, severity: true },
         },
       },
     })
 
-    if (!vendor) {
-      return NextResponse.json({ error: 'Vendor not found' }, { status: 404 })
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
-    const riskProfile = vendor.riskProfiles[0]
-    if (!riskProfile) {
+    const clientProfile = client.clientProfiles[0]
+    if (!clientProfile) {
       return NextResponse.json(
         { error: 'Party must have a profile before document review' },
         { status: 400 }
@@ -55,17 +55,17 @@ export async function POST(request: NextRequest) {
 
     // Execute CLARA agent
     const result = await clara.execute({
-      vendorId: validated.vendorId,
-      riskProfileId: riskProfile.id,
+      clientId: validated.clientId,
+      clientProfileId: clientProfile.id,
       assessmentType: validated.assessmentType,
-      vendorInfo: {
-        name: vendor.name,
-        industry: vendor.industry || 'Unknown',
-        country: vendor.country || 'Unknown',
-        annualSpend: Number(vendor.annualSpend) || 0,
+      clientInfo: {
+        name: client.name,
+        industry: client.industry || 'Unknown',
+        country: client.country || 'Unknown',
+        annualSpend: Number(client.annualSpend) || 0,
       },
-      existingFindings: vendor.riskFindings.map(
-        (f) => `[${f.severity}] ${f.title}`
+      existingIssues: client.issues.map(
+        (f: { severity: string; title: string }) => `[${f.severity}] ${f.title}`
       ),
     })
 

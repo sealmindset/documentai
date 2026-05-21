@@ -47,7 +47,7 @@ Also analyze the document for case review purposes.
 
 Return JSON with this exact structure:
 {
-  "vendorInfo": {
+  "clientInfo": {
     "name": "string or null (party/client name)",
     "legalName": "string or null (full legal name)",
     "dunsNumber": "string or null (case/docket number)",
@@ -137,7 +137,7 @@ export class AURAAgent extends BaseAgent {
   }
 
   /**
-   * Extract vendor information and analyze a document.
+   * Extract client information and analyze a document.
    * Handles both text documents (via invokeWithJSON) and images (via chat with multimodal content).
    */
   async execute(input: DocumentExtractionInput): Promise<AgentResult<DocumentExtractionOutput>> {
@@ -160,9 +160,9 @@ export class AURAAgent extends BaseAgent {
         activityType: 'DOCUMENT_EXTRACTION',
         entityType: 'Document',
         entityId: input.fileName,
-        actionTaken: `Extracted vendor info from ${input.fileName}`,
+        actionTaken: `Extracted client info from ${input.fileName}`,
         inputSummary: `File: ${input.fileName}, Type: ${input.isImage ? 'image' : 'text'}, Size: ${input.text.length} chars`,
-        outputSummary: `Vendor: ${result.vendorInfo?.name || 'unknown'}, DocType: ${result.documentAnalysis?.documentType || 'unknown'}`,
+        outputSummary: `Client: ${result.clientInfo?.name || 'unknown'}, DocType: ${result.documentAnalysis?.documentType || 'unknown'}`,
         status: 'SUCCESS',
         processingTimeMs: Date.now() - startTime,
       })

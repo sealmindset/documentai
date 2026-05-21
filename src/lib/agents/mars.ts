@@ -14,7 +14,7 @@
 
 import { BaseAgent } from './base-agent'
 import prisma from '@/lib/db'
-import type { AgentConfig, AgentResult, RemediationInput, RemediationPlan } from './types'
+import type { AgentConfig, AgentResult, ActionItemInput, ActionItemPlan } from './types'
 
 const ATLAS_CONFIG: AgentConfig = {
   name: 'ATLAS',
@@ -25,20 +25,20 @@ const ATLAS_CONFIG: AgentConfig = {
 }
 
 interface EscalationResult {
-  findingId: string
+  issueId: string
   escalated: boolean
   escalationLevel: number
   notificationsSent: string[]
   nextAction: string
 }
 
-interface RemediationStatus {
-  vendorId: string
+interface ActionItemStatus {
+  clientId: string
   totalActions: number
   openActions: number
   overdueActions: number
   completedThisMonth: number
-  averageRemediationDays: number
+  averageResolutionDays: number
   slaCompliance: number
 }
 
@@ -79,26 +79,26 @@ Level 4: Notification to managing partner
 Always be professional but firm in communications. Document everything thoroughly for the case file.`
   }
 
-  async execute(input: RemediationInput): Promise<AgentResult<RemediationPlan>> {
+  async execute(input: ActionItemInput): Promise<AgentResult<ActionItemPlan>> {
     const startTime = Date.now()
 
     try {
       const prompt = `Create an action plan for the following case issue:
 
 Issue Information:
-- Finding ID: ${input.findingId}
-- Title: ${input.finding.title}
-- Severity: ${input.finding.severity}
-- Description: ${input.finding.description}
+- Issue ID: ${input.issueId}
+- Title: ${input.issue.title}
+- Severity: ${input.issue.severity}
+- Description: ${input.issue.description}
 
 Case Information:
-- Case ID: ${input.vendorId}
-- Attorney/Contact Name: ${input.vendorContact.name}
-- Attorney/Contact Email: ${input.vendorContact.email}
+- Case ID: ${input.clientId}
+- Attorney/Contact Name: ${input.clientContact.name}
+- Attorney/Contact Email: ${input.clientContact.email}
 
-Create a remediation plan in the following JSON format:
+Create an action item plan in the following JSON format:
 {
-  "findingId": "string",
+  "issueId": "string",
   "actions": [
     {
       "title": "Action title",
@@ -107,22 +107,22 @@ Create a remediation plan in the following JSON format:
       "priority": "CRITICAL|HIGH|MEDIUM|LOW",
       "dueDate": "YYYY-MM-DD",
       "assignedTo": "Name/role of assignee",
-      "ownerType": "VENDOR|INTERNAL"
+      "ownerType": "CLIENT|INTERNAL"
     }
   ],
   "timeline": "Overall timeline description",
   "escalationPath": ["Level 1 contact", "Level 2 contact", "Level 3 contact"]
 }`
 
-      const result = await this.invokeWithJSON<RemediationPlan>(prompt)
-      result.findingId = input.findingId
+      const result = await this.invokeWithJSON<ActionItemPlan>(prompt)
+      result.issueId = input.issueId
 
-      // Save remediation actions to database
+      // Save action items to database
       for (const action of result.actions) {
-        await prisma.remediationAction.create({
+        await prisma.actionItem.create({
           data: {
-            findingId: input.findingId,
-            vendorId: input.vendorId,
+            issueId: input.issueId,
+            clientId: input.clientId,
             actionType: action.actionType as any,
             title: action.title,
             description: action.description,
@@ -136,33 +136,33 @@ Create a remediation plan in the following JSON format:
         })
       }
 
-      // Update finding status
-      await prisma.riskFinding.update({
-        where: { id: input.findingId },
+      // Update issue status
+      await prisma.issue.update({
+        where: { id: input.issueId },
         data: { status: 'IN_REMEDIATION' },
       })
 
-      // Create notification for vendor
+      // Create notification for client
       await prisma.notification.create({
         data: {
-          recipientType: 'VENDOR',
-          recipientId: input.vendorId,
+          recipientType: 'CLIENT',
+          recipientId: input.clientId,
           notificationType: 'REMEDIATION_REQUIRED',
-          title: `Remediation Required: ${input.finding.title}`,
-          message: `A ${input.finding.severity} severity finding requires your attention. Please review and address within the specified timeline.`,
-          relatedEntityType: 'RiskFinding',
-          relatedEntityId: input.findingId,
+          title: `Action Required: ${input.issue.title}`,
+          message: `A ${input.issue.severity} severity issue requires your attention. Please review and address within the specified timeline.`,
+          relatedEntityType: 'Issue',
+          relatedEntityId: input.issueId,
           sentBy: 'ATLAS',
           status: 'PENDING',
         },
       })
 
       await this.logActivity({
-        activityType: 'REMEDIATION_PLAN',
-        entityType: 'RiskFinding',
-        entityId: input.findingId,
-        actionTaken: `Created remediation plan with ${result.actions.length} actions`,
-        inputSummary: `Finding: ${input.finding.title}`,
+        activityType: 'ACTION_ITEM_PLAN',
+        entityType: 'Issue',
+        entityId: input.issueId,
+        actionTaken: `Created action item plan with ${result.actions.length} actions`,
+        inputSummary: `Issue: ${input.issue.title}`,
         outputSummary: `Actions: ${result.actions.map((a) => a.actionType).join(', ')}`,
         status: 'SUCCESS',
         processingTimeMs: Date.now() - startTime,
@@ -173,15 +173,15 @@ Create a remediation plan in the following JSON format:
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
       await this.logActivity({
-        activityType: 'REMEDIATION_PLAN',
-        entityType: 'RiskFinding',
-        entityId: input.findingId,
+        activityType: 'ACTION_ITEM_PLAN',
+        entityType: 'Issue',
+        entityId: input.issueId,
         status: 'FAILED',
         errorMessage,
         processingTimeMs: Date.now() - startTime,
       })
 
-      return this.createResult<RemediationPlan>(false, undefined, errorMessage, startTime)
+      return this.createResult<ActionItemPlan>(false, undefined, errorMessage, startTime)
     }
   }
 
@@ -189,14 +189,14 @@ Create a remediation plan in the following JSON format:
     const startTime = Date.now()
 
     try {
-      const overdueActions = await prisma.remediationAction.findMany({
+      const overdueActions = await prisma.actionItem.findMany({
         where: {
           status: { in: ['OPEN', 'IN_PROGRESS'] },
           dueDate: { lt: new Date() },
         },
         include: {
-          finding: true,
-          vendor: true,
+          issue: true,
+          client: true,
         },
       })
 
@@ -217,7 +217,7 @@ Create a remediation plan in the following JSON format:
         }
 
         // Update action status
-        await prisma.remediationAction.update({
+        await prisma.actionItem.update({
           where: { id: action.id },
           data: { status: 'OVERDUE' },
         })
@@ -228,8 +228,8 @@ Create a remediation plan in the following JSON format:
             recipientType: 'INTERNAL',
             notificationType: 'ESCALATION',
             title: `[ESCALATION L${escalationLevel}] Overdue Action: ${action.title}`,
-            message: `Remediation action for ${action.vendor.name} is ${daysOverdue} days overdue. Priority: ${action.priority}`,
-            relatedEntityType: 'RemediationAction',
+            message: `Action item for ${action.client.name} is ${daysOverdue} days overdue. Priority: ${action.priority}`,
+            relatedEntityType: 'ActionItem',
             relatedEntityId: action.id,
             sentBy: 'ATLAS',
             status: 'PENDING',
@@ -237,7 +237,7 @@ Create a remediation plan in the following JSON format:
         })
 
         escalationResults.push({
-          findingId: action.findingId,
+          issueId: action.issueId,
           escalated: true,
           escalationLevel,
           notificationsSent: [`Level ${escalationLevel} escalation`],
@@ -260,17 +260,17 @@ Create a remediation plan in the following JSON format:
     }
   }
 
-  async getVendorRemediationStatus(vendorId: string): Promise<AgentResult<RemediationStatus>> {
+  async getClientActionItemStatus(clientId: string): Promise<AgentResult<ActionItemStatus>> {
     const startTime = Date.now()
 
     try {
       const [actions, completedRecent] = await Promise.all([
-        prisma.remediationAction.findMany({
-          where: { vendorId },
+        prisma.actionItem.findMany({
+          where: { clientId },
         }),
-        prisma.remediationAction.findMany({
+        prisma.actionItem.findMany({
           where: {
-            vendorId,
+            clientId,
             status: 'CLOSED',
             completionDate: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -287,7 +287,7 @@ Create a remediation plan in the following JSON format:
       )
       const closedActions = actions.filter((a) => a.status === 'CLOSED' && a.completionDate)
 
-      // Calculate average remediation time
+      // Calculate average resolution time
       let avgDays = 0
       if (closedActions.length > 0) {
         const totalDays = closedActions.reduce((sum, a) => {
@@ -308,40 +308,40 @@ Create a remediation plan in the following JSON format:
           ? Math.round((onTimeActions.length / closedActions.length) * 100)
           : 100
 
-      const result: RemediationStatus = {
-        vendorId,
+      const result: ActionItemStatus = {
+        clientId,
         totalActions: actions.length,
         openActions: openActions.length,
         overdueActions: overdueActions.length,
         completedThisMonth: completedRecent.length,
-        averageRemediationDays: avgDays,
+        averageResolutionDays: avgDays,
         slaCompliance,
       }
 
       return this.createResult(true, result, undefined, startTime)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      return this.createResult<RemediationStatus>(false, undefined, errorMessage, startTime)
+      return this.createResult<ActionItemStatus>(false, undefined, errorMessage, startTime)
     }
   }
 
   async processRiskAcceptance(
-    findingId: string,
+    issueId: string,
     justification: string,
     approver: string
   ): Promise<AgentResult<{ accepted: boolean; expirationDate: Date }>> {
     const startTime = Date.now()
 
     try {
-      // Update finding status
-      await prisma.riskFinding.update({
-        where: { id: findingId },
+      // Update issue status
+      await prisma.issue.update({
+        where: { id: issueId },
         data: { status: 'ACCEPTED' },
       })
 
-      // Update any related remediation actions
-      await prisma.remediationAction.updateMany({
-        where: { findingId },
+      // Update any related action items
+      await prisma.actionItem.updateMany({
+        where: { issueId },
         data: {
           status: 'CLOSED',
           actionType: 'ACCEPT',
@@ -359,8 +359,8 @@ Create a remediation plan in the following JSON format:
         data: {
           agentName: 'ATLAS',
           action: 'RISK_ACCEPTANCE',
-          entityType: 'RiskFinding',
-          entityId: findingId,
+          entityType: 'Issue',
+          entityId: issueId,
           newValues: JSON.stringify({
             status: 'ACCEPTED',
             approver,
@@ -372,8 +372,8 @@ Create a remediation plan in the following JSON format:
 
       await this.logActivity({
         activityType: 'RISK_ACCEPTANCE',
-        entityType: 'RiskFinding',
-        entityId: findingId,
+        entityType: 'Issue',
+        entityId: issueId,
         actionTaken: `Processed risk acceptance, approved by ${approver}`,
         status: 'SUCCESS',
         processingTimeMs: Date.now() - startTime,

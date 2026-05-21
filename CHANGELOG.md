@@ -2,6 +2,35 @@
 
 All notable changes to Document AI Platform will be documented in this file.
 
+## [4.0.0] - 2026-05-21
+
+### Changed
+- **BREAKING: Full terminology normalization from TPRM to legal-centric naming**
+  - Database: Vendor→Client, RiskProfile→ClientProfile, RiskAssessment→CaseReview, RiskFinding→Issue, RemediationAction→ActionItem
+  - Tables: vendors→clients, risk_profiles→client_profiles, risk_assessments→case_reviews, risk_findings→issues, remediation_actions→action_items
+  - Fields: vendorId→clientId, riskTier→priorityTier, overallRiskScore→overallReviewScore, riskRating→reviewRating, all categoryRiskScore→categoryScore, findingId→issueCode/issueId, assessmentId→caseReviewId
+  - API routes: /api/vendors→/api/clients
+  - Frontend routes: /parties→/clients
+  - Permission resource: vendors→clients
+  - All agent code, lib files, components, and seed data updated
+- Prisma migration renames tables and columns (data-preserving ALTER statements)
+
+## [3.1.0] - 2026-05-21
+
+### Added
+- **Testing: Vitest unit test suite** -- 83 tests across 7 test files covering:
+  - AI input sanitization (prompt injection, control chars, delimiter wrapping, size limits)
+  - AI output validation (schema rules, enum checks, range clamping, JSON recovery)
+  - Prompt template validation (blocked patterns, warnings, safe rendering, adversarial testing)
+  - AI rate limiting (per-user request limits, token budgets, 429 responses)
+  - PII masking/unmasking (emails, phones, SSNs, roundtrip, env toggle)
+  - Activity log store (circular buffer, FIFO eviction, filtering, noise skipping, stats)
+  - Auth permission checking (hasPermission, AuthMe type contract)
+- **Testing: Playwright E2E test suite** -- smoke tests for auth API, protected routes, admin routes, rate limiting, content-type validation (requires running Docker app)
+- vitest.config.ts with `@/` path alias resolution
+- playwright.config.ts targeting localhost:3020
+- npm scripts: `test`, `test:watch`, `test:e2e`, `test:all`
+
 ## [3.0.0] - 2026-05-21
 
 ### Changed

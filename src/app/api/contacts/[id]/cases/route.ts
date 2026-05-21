@@ -18,13 +18,13 @@ const VALID_ROLES = [
 ] as const
 
 const linkCaseSchema = z.object({
-  vendorId: z.string().min(1),
+  clientId: z.string().min(1),
   role: z.enum(VALID_ROLES),
   notes: z.string().max(5000).optional(),
 })
 
 const unlinkCaseSchema = z.object({
-  vendorId: z.string().min(1),
+  clientId: z.string().min(1),
   role: z.enum(VALID_ROLES),
 })
 
@@ -53,21 +53,21 @@ export async function POST(
       return NextResponse.json({ error: 'Contact not found' }, { status: 404 })
     }
 
-    // Verify vendor (case) exists
-    const vendor = await prisma.vendor.findUnique({ where: { id: validated.vendorId } })
-    if (!vendor) {
+    // Verify client (case) exists
+    const client = await prisma.client.findUnique({ where: { id: validated.clientId } })
+    if (!client) {
       return NextResponse.json({ error: 'Case not found' }, { status: 404 })
     }
 
     const caseContact = await prisma.caseContact.create({
       data: {
         contactId,
-        vendorId: validated.vendorId,
+        clientId: validated.clientId,
         role: validated.role,
         notes: validated.notes,
       },
       include: {
-        vendor: {
+        client: {
           select: { id: true, name: true, status: true },
         },
         contact: true,
@@ -122,7 +122,7 @@ export async function DELETE(
     const caseContact = await prisma.caseContact.findFirst({
       where: {
         contactId,
-        vendorId: validated.vendorId,
+        clientId: validated.clientId,
         role: validated.role,
       },
     })

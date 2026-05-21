@@ -18,7 +18,7 @@ interface PipelineProgressProps {
 }
 
 const agentDescriptions: Record<string, string> = {
-  LEXA: 'Party Profiling',
+  LEXA: 'Client Profiling',
   CLARA: 'Document Review',
   DORA: 'Document Collection',
   ARIA: 'Document Analysis',

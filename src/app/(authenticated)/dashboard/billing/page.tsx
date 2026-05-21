@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, DollarSign } from 'lucide-react'
 
-interface Vendor {
+interface Client {
   id: string
   name: string
   status: string
@@ -31,20 +31,20 @@ function formatCurrency(n: number) {
 
 export default function BillingPage() {
   const router = useRouter()
-  const [vendors, setVendors] = useState<Vendor[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/vendors')
-      .then((r) => r.ok ? r.json() : { vendors: [] })
-      .then((d) => setVendors(d.vendors || d))
+    fetch('/api/clients')
+      .then((r) => r.ok ? r.json() : { clients: [] })
+      .then((d) => setClients(d.clients || d))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
-  const totalFees = vendors.reduce((sum, v) => sum + (v.annualSpend || 0), 0)
+  const totalFees = clients.reduce((sum, v) => sum + (v.annualSpend || 0), 0)
 
-  const columns: Column<Vendor>[] = [
+  const columns: Column<Client>[] = [
     { key: 'name', header: 'Case', sortable: true, filterable: true },
     {
       key: 'status', header: 'Status', sortable: true, filterable: true,
@@ -83,10 +83,10 @@ export default function BillingPage() {
         <CardContent className="pt-6">
           <DataTable
             columns={columns}
-            data={vendors}
+            data={clients}
             loading={loading}
             searchPlaceholder="Search cases..."
-            onRowClick={(row) => router.push(`/parties/${row.id}`)}
+            onRowClick={(row) => router.push(`/clients/${row.id}`)}
           />
         </CardContent>
       </Card>

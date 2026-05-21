@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, Briefcase } from 'lucide-react'
 
-interface Vendor {
+interface Client {
   id: string
   name: string
   status: string
@@ -26,18 +26,18 @@ function getStatusBadge(status: string) {
 
 export default function CasesByTypePage() {
   const router = useRouter()
-  const [vendors, setVendors] = useState<Vendor[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/vendors')
-      .then((r) => r.ok ? r.json() : { vendors: [] })
-      .then((d) => setVendors(d.vendors || d))
+    fetch('/api/clients')
+      .then((r) => r.ok ? r.json() : { clients: [] })
+      .then((d) => setClients(d.clients || d))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
-  const columns: Column<Vendor>[] = [
+  const columns: Column<Client>[] = [
     { key: 'name', header: 'Case', sortable: true, filterable: true },
     {
       key: 'category', header: 'Category', sortable: true, filterable: true,
@@ -73,10 +73,10 @@ export default function CasesByTypePage() {
         <CardContent className="pt-6">
           <DataTable
             columns={columns}
-            data={vendors}
+            data={clients}
             loading={loading}
             searchPlaceholder="Search cases..."
-            onRowClick={(row) => router.push(`/parties/${row.id}`)}
+            onRowClick={(row) => router.push(`/clients/${row.id}`)}
           />
         </CardContent>
       </Card>

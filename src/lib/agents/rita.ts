@@ -98,12 +98,12 @@ Create a comprehensive report in the following JSON format:
   "content": "Full markdown-formatted report content",
   "executiveSummary": "2-3 paragraph executive summary",
   "keyMetrics": {
-    "totalVendors": number,
-    "criticalVendors": number,
-    "highRiskVendors": number,
-    "openFindings": number,
-    "criticalFindings": number,
-    "averageRiskScore": number,
+    "totalClients": number,
+    "criticalClients": number,
+    "highPriorityClients": number,
+    "openIssues": number,
+    "criticalIssues": number,
+    "averageReviewScore": number,
     "complianceRate": number
   },
   "recommendations": ["Array of prioritized recommendations"]
@@ -114,8 +114,8 @@ Create a comprehensive report in the following JSON format:
       // Save report to database
       const report = await prisma.report.create({
         data: {
-          vendorId: input.vendorId,
-          assessmentId: input.assessmentId,
+          clientId: input.clientId,
+          caseReviewId: input.caseReviewId,
           reportType: input.reportType as any,
           reportName: result.reportName,
           generatedBy: 'RITA',
@@ -154,55 +154,55 @@ Create a comprehensive report in the following JSON format:
   private async gatherReportData(input: ReportInput): Promise<string> {
     let data = ''
 
-    if (input.vendorId) {
-      // Single vendor report
-      const vendor = await prisma.vendor.findUnique({
-        where: { id: input.vendorId },
+    if (input.clientId) {
+      // Single client report
+      const client = await prisma.client.findUnique({
+        where: { id: input.clientId },
         include: {
-          riskProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
-          riskAssessments: { orderBy: { createdAt: 'desc' }, take: 5 },
-          riskFindings: { where: { status: { not: 'CLOSED' } } },
+          clientProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
+          caseReviews: { orderBy: { createdAt: 'desc' }, take: 5 },
+          issues: { where: { status: { not: 'CLOSED' } } },
           documents: { where: { isCurrent: true } },
         },
       })
 
-      if (vendor) {
+      if (client) {
         data = `
-VENDOR INFORMATION:
-- Name: ${vendor.name}
-- Industry: ${vendor.industry || 'N/A'}
-- Status: ${vendor.status}
-- Annual Spend: $${vendor.annualSpend?.toString() || 'N/A'}
+CLIENT INFORMATION:
+- Name: ${client.name}
+- Industry: ${client.industry || 'N/A'}
+- Status: ${client.status}
+- Annual Spend: $${client.annualSpend?.toString() || 'N/A'}
 
-RISK PROFILE:
-- Risk Tier: ${vendor.riskProfiles[0]?.riskTier || 'Not Assessed'}
-- Risk Score: ${vendor.riskProfiles[0]?.overallRiskScore || 'N/A'}
-- Data Access: PII: ${vendor.riskProfiles[0]?.hasPiiAccess}, PHI: ${vendor.riskProfiles[0]?.hasPhiAccess}, PCI: ${vendor.riskProfiles[0]?.hasPciAccess}
+CLIENT PROFILE:
+- Priority Tier: ${client.clientProfiles[0]?.priorityTier || 'Not Assessed'}
+- Review Score: ${client.clientProfiles[0]?.overallReviewScore || 'N/A'}
+- Data Access: PII: ${client.clientProfiles[0]?.hasPiiAccess}, PHI: ${client.clientProfiles[0]?.hasPhiAccess}, PCI: ${client.clientProfiles[0]?.hasPciAccess}
 
-RECENT ASSESSMENTS:
-${vendor.riskAssessments.map((a) => `- ${a.assessmentType} (${a.assessmentDate?.toISOString().split('T')[0]}): ${a.riskRating} - ${a.summary?.substring(0, 200)}`).join('\n')}
+RECENT CASE REVIEWS:
+${client.caseReviews.map((a) => `- ${a.assessmentType} (${a.assessmentDate?.toISOString().split('T')[0]}): ${a.reviewRating} - ${a.summary?.substring(0, 200)}`).join('\n')}
 
-OPEN FINDINGS (${vendor.riskFindings.length}):
-${vendor.riskFindings.map((f) => `- [${f.severity}] ${f.title}`).join('\n')}
+OPEN ISSUES (${client.issues.length}):
+${client.issues.map((f) => `- [${f.severity}] ${f.title}`).join('\n')}
 
-DOCUMENTS ON FILE (${vendor.documents.length}):
-${vendor.documents.map((d) => `- ${d.documentType}: ${d.status}`).join('\n')}
+DOCUMENTS ON FILE (${client.documents.length}):
+${client.documents.map((d) => `- ${d.documentType}: ${d.status}`).join('\n')}
 `
       }
     } else {
       // Portfolio report
-      const [vendors, findings, assessments] = await Promise.all([
-        prisma.vendor.findMany({
+      const [clients, issues, caseReviews] = await Promise.all([
+        prisma.client.findMany({
           include: {
-            riskProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
+            clientProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
           },
         }),
-        prisma.riskFinding.groupBy({
+        prisma.issue.groupBy({
           by: ['severity'],
           _count: true,
           where: { status: { not: 'CLOSED' } },
         }),
-        prisma.riskAssessment.count({
+        prisma.caseReview.count({
           where: {
             createdAt: {
               gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
@@ -211,43 +211,43 @@ ${vendor.documents.map((d) => `- ${d.documentType}: ${d.status}`).join('\n')}
         }),
       ])
 
-      const riskDistribution = {
-        critical: vendors.filter((v) => v.riskProfiles[0]?.riskTier === 'CRITICAL').length,
-        high: vendors.filter((v) => v.riskProfiles[0]?.riskTier === 'HIGH').length,
-        medium: vendors.filter((v) => v.riskProfiles[0]?.riskTier === 'MEDIUM').length,
-        low: vendors.filter((v) => v.riskProfiles[0]?.riskTier === 'LOW').length,
+      const priorityDistribution = {
+        critical: clients.filter((v) => v.clientProfiles[0]?.priorityTier === 'CRITICAL').length,
+        high: clients.filter((v) => v.clientProfiles[0]?.priorityTier === 'HIGH').length,
+        medium: clients.filter((v) => v.clientProfiles[0]?.priorityTier === 'MEDIUM').length,
+        low: clients.filter((v) => v.clientProfiles[0]?.priorityTier === 'LOW').length,
       }
 
-      const findingsBySeverity: Record<string, number> = {}
-      findings.forEach((f) => {
-        findingsBySeverity[f.severity] = f._count
+      const issuesBySeverity: Record<string, number> = {}
+      issues.forEach((f) => {
+        issuesBySeverity[f.severity] = f._count
       })
 
       data = `
 PORTFOLIO OVERVIEW:
-- Total Vendors: ${vendors.length}
-- Active Vendors: ${vendors.filter((v) => v.status === 'ACTIVE').length}
+- Total Clients: ${clients.length}
+- Active Clients: ${clients.filter((v) => v.status === 'ACTIVE').length}
 
-RISK DISTRIBUTION:
-- Critical: ${riskDistribution.critical}
-- High: ${riskDistribution.high}
-- Medium: ${riskDistribution.medium}
-- Low: ${riskDistribution.low}
+PRIORITY DISTRIBUTION:
+- Critical: ${priorityDistribution.critical}
+- High: ${priorityDistribution.high}
+- Medium: ${priorityDistribution.medium}
+- Low: ${priorityDistribution.low}
 
-OPEN FINDINGS BY SEVERITY:
-- Critical: ${findingsBySeverity['CRITICAL'] || 0}
-- High: ${findingsBySeverity['HIGH'] || 0}
-- Medium: ${findingsBySeverity['MEDIUM'] || 0}
-- Low: ${findingsBySeverity['LOW'] || 0}
+OPEN ISSUES BY SEVERITY:
+- Critical: ${issuesBySeverity['CRITICAL'] || 0}
+- High: ${issuesBySeverity['HIGH'] || 0}
+- Medium: ${issuesBySeverity['MEDIUM'] || 0}
+- Low: ${issuesBySeverity['LOW'] || 0}
 
-ASSESSMENT ACTIVITY (Last 90 Days):
-- Assessments Completed: ${assessments}
+CASE REVIEW ACTIVITY (Last 90 Days):
+- Case Reviews Completed: ${caseReviews}
 
-TOP CRITICAL VENDORS:
-${vendors
-  .filter((v) => v.riskProfiles[0]?.riskTier === 'CRITICAL')
+TOP CRITICAL CLIENTS:
+${clients
+  .filter((v) => v.clientProfiles[0]?.priorityTier === 'CRITICAL')
   .slice(0, 5)
-  .map((v) => `- ${v.name} (Score: ${v.riskProfiles[0]?.overallRiskScore})`)
+  .map((v) => `- ${v.name} (Score: ${v.clientProfiles[0]?.overallReviewScore})`)
   .join('\n')}
 `
     }
@@ -266,16 +266,16 @@ ${vendors
 
     try {
       const [
-        totalVendors,
-        criticalVendors,
-        openFindings,
-        pendingAssessments,
+        totalClients,
+        criticalClients,
+        openIssues,
+        pendingReviews,
         expiringDocs,
       ] = await Promise.all([
-        prisma.vendor.count({ where: { status: 'ACTIVE' } }),
-        prisma.riskProfile.count({ where: { riskTier: 'CRITICAL' } }),
-        prisma.riskFinding.count({ where: { status: 'OPEN' } }),
-        prisma.riskAssessment.count({ where: { assessmentStatus: 'IN_PROGRESS' } }),
+        prisma.client.count({ where: { status: 'ACTIVE' } }),
+        prisma.clientProfile.count({ where: { priorityTier: 'CRITICAL' } }),
+        prisma.issue.count({ where: { status: 'OPEN' } }),
+        prisma.caseReview.count({ where: { assessmentStatus: 'IN_PROGRESS' } }),
         prisma.document.count({
           where: {
             expirationDate: {
@@ -287,16 +287,16 @@ ${vendors
       ])
 
       const metrics = {
-        totalVendors,
-        criticalVendors,
-        openFindings,
-        pendingAssessments,
+        totalClients,
+        criticalClients,
+        openIssues,
+        pendingReviews,
         expiringDocuments: expiringDocs,
       }
 
       const alerts: string[] = []
-      if (criticalVendors > 0) alerts.push(`${criticalVendors} critical-tier vendors require attention`)
-      if (openFindings > 10) alerts.push(`${openFindings} open findings pending remediation`)
+      if (criticalClients > 0) alerts.push(`${criticalClients} critical-tier clients require attention`)
+      if (openIssues > 10) alerts.push(`${openIssues} open issues pending resolution`)
       if (expiringDocs > 0) alerts.push(`${expiringDocs} documents expiring within 30 days`)
 
       return this.createResult(

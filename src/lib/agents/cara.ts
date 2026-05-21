@@ -12,9 +12,9 @@
  */
 
 import { BaseAgent } from './base-agent'
-import { ASSESSMENT_SCORE_RULES, type ValidationRule } from '@/lib/ai/validate'
+import { CASE_REVIEW_SCORE_RULES, type ValidationRule } from '@/lib/ai/validate'
 import prisma from '@/lib/db'
-import type { AgentConfig, AgentResult, AssessmentInput, AssessmentOutput } from './types'
+import type { AgentConfig, AgentResult, CaseReviewInput, CaseReviewOutput } from './types'
 
 const CLARA_CONFIG: AgentConfig = {
   name: 'CLARA',
@@ -30,7 +30,7 @@ export class CLARAAgent extends BaseAgent {
   }
 
   protected getOutputValidationRules(): ValidationRule[] {
-    return ASSESSMENT_SCORE_RULES
+    return CASE_REVIEW_SCORE_RULES
   }
 
   protected getDefaultSystemPrompt(): string {
@@ -38,37 +38,37 @@ export class CLARAAgent extends BaseAgent {
 
 Your role is to perform comprehensive case assessments across multiple dimensions:
 
-1. Evidence Strength (1-5 scale) [maps to securityRiskScore]
+1. Evidence Strength (1-5 scale) [maps to securityScore]
    - Quality and admissibility of evidence
    - Chain of custody integrity
    - Forensic analysis reliability
    - Documentary evidence completeness
 
-2. Legal Merit (1-5 scale) [maps to operationalRiskScore]
+2. Legal Merit (1-5 scale) [maps to operationalScore]
    - Applicable statutes and elements of proof
    - Case law support and precedent
    - Procedural compliance by prosecution/opposing counsel
    - Constitutional issues and suppression opportunities
 
-3. Witness Reliability (1-5 scale) [maps to complianceRiskScore]
+3. Witness Reliability (1-5 scale) [maps to complianceScore]
    - Witness credibility and consistency
    - Availability and willingness to testify
    - Potential impeachment material
    - Expert witness qualifications
 
-4. Procedural Compliance (1-5 scale) [maps to financialRiskScore]
+4. Procedural Compliance (1-5 scale) [maps to financialScore]
    - Proper arrest and search procedures
    - Miranda compliance and waiver validity
    - Speedy trial and due process considerations
    - Discovery compliance and Brady obligations
 
-5. Settlement/Plea Potential (1-5 scale) [maps to reputationalRiskScore]
+5. Settlement/Plea Potential (1-5 scale) [maps to reputationalScore]
    - Prosecution/opposing counsel's position and flexibility
    - Client's preference and risk tolerance
    - Judge's tendencies and sentencing patterns
    - Precedent outcomes in similar cases
 
-6. Client Risk (1-5 scale) [maps to strategicRiskScore]
+6. Client Risk (1-5 scale) [maps to strategicScore]
    - Flight risk assessment
    - Prior criminal record and history
    - Compliance with release conditions
@@ -81,63 +81,63 @@ Overall Case Rating Calculation:
 Provide detailed, actionable case assessments with specific strategy recommendations.`
   }
 
-  async execute(input: AssessmentInput): Promise<AgentResult<AssessmentOutput>> {
+  async execute(input: CaseReviewInput): Promise<AgentResult<CaseReviewOutput>> {
     const startTime = Date.now()
 
     try {
       const prompt = `Conduct a comprehensive case analysis for the following matter:
 
 Case Information:
-- Case ID: ${input.vendorId}
-- Case/Client Name: ${input.vendorInfo.name}
-- Case Type: ${input.vendorInfo.industry}
-- Jurisdiction: ${input.vendorInfo.country}
-- Estimated Exposure: $${input.vendorInfo.annualSpend.toLocaleString()}
+- Case ID: ${input.clientId}
+- Case/Client Name: ${input.clientInfo.name}
+- Case Type: ${input.clientInfo.industry}
+- Jurisdiction: ${input.clientInfo.country}
+- Estimated Exposure: $${input.clientInfo.annualSpend.toLocaleString()}
 
 Analysis Type: ${input.assessmentType}
-Case Profile ID: ${input.riskProfileId}
+Case Profile ID: ${input.clientProfileId}
 
-${input.existingFindings?.length ? `Existing Issues from Prior Analysis:\n${input.existingFindings.join('\n')}` : ''}
+${input.existingIssues?.length ? `Existing Issues from Prior Analysis:\n${input.existingIssues.join('\n')}` : ''}
 
 Provide a detailed case analysis in the following JSON format:
 {
-  "vendorId": "string",
-  "securityRiskScore": number (1-5),
-  "operationalRiskScore": number (1-5),
-  "complianceRiskScore": number (1-5),
-  "financialRiskScore": number (1-5),
-  "reputationalRiskScore": number (1-5),
-  "strategicRiskScore": number (1-5),
+  "clientId": "string",
+  "securityScore": number (1-5),
+  "operationalScore": number (1-5),
+  "complianceScore": number (1-5),
+  "financialScore": number (1-5),
+  "reputationalScore": number (1-5),
+  "strategicScore": number (1-5),
   "overallScore": number (1-5),
-  "riskRating": "CRITICAL|HIGH|MEDIUM|LOW",
+  "reviewRating": "CRITICAL|HIGH|MEDIUM|LOW",
   "summary": "Executive summary of the assessment",
   "recommendations": ["array of specific recommendations"],
   "requiredDocuments": ["array of documents needed for full assessment"]
 }`
 
-      const result = await this.invokeWithJSON<AssessmentOutput>(prompt)
-      result.vendorId = input.vendorId
+      const result = await this.invokeWithJSON<CaseReviewOutput>(prompt)
+      result.clientId = input.clientId
 
       // Convert 1-5 scale to percentage for storage
       const overallPercentage = Math.round((result.overallScore / 5) * 100)
 
-      // Save assessment to database
-      const assessment = await prisma.riskAssessment.create({
+      // Save case review to database
+      const caseReview = await prisma.caseReview.create({
         data: {
-          vendorId: input.vendorId,
-          riskProfileId: input.riskProfileId,
+          clientId: input.clientId,
+          clientProfileId: input.clientProfileId,
           assessmentType: input.assessmentType,
           assessmentStatus: 'COMPLETE',
           assessedBy: 'CLARA',
           assessmentDate: new Date(),
-          securityRiskScore: result.securityRiskScore,
-          operationalRiskScore: result.operationalRiskScore,
-          complianceRiskScore: result.complianceRiskScore,
-          financialRiskScore: result.financialRiskScore,
-          reputationalRiskScore: result.reputationalRiskScore,
-          strategicRiskScore: result.strategicRiskScore,
-          overallAssessmentScore: overallPercentage,
-          riskRating: result.riskRating,
+          securityScore: result.securityScore,
+          operationalScore: result.operationalScore,
+          complianceScore: result.complianceScore,
+          financialScore: result.financialScore,
+          reputationalScore: result.reputationalScore,
+          strategicScore: result.strategicScore,
+          overallReviewScore: overallPercentage,
+          reviewRating: result.reviewRating,
           summary: result.summary,
           recommendations: result.recommendations.join('\n\n'),
         },
@@ -145,12 +145,12 @@ Provide a detailed case analysis in the following JSON format:
 
       // Log activity
       await this.logActivity({
-        activityType: 'RISK_ASSESSMENT',
-        entityType: 'Vendor',
-        entityId: input.vendorId,
-        actionTaken: `Completed ${input.assessmentType} assessment`,
-        inputSummary: `Vendor: ${input.vendorInfo.name}, Type: ${input.assessmentType}`,
-        outputSummary: `Rating: ${result.riskRating}, Overall Score: ${result.overallScore}/5`,
+        activityType: 'CASE_REVIEW',
+        entityType: 'Client',
+        entityId: input.clientId,
+        actionTaken: `Completed ${input.assessmentType} case review`,
+        inputSummary: `Client: ${input.clientInfo.name}, Type: ${input.assessmentType}`,
+        outputSummary: `Rating: ${result.reviewRating}, Overall Score: ${result.overallScore}/5`,
         status: 'SUCCESS',
         processingTimeMs: Date.now() - startTime,
       })
@@ -160,16 +160,16 @@ Provide a detailed case analysis in the following JSON format:
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
       await this.logActivity({
-        activityType: 'RISK_ASSESSMENT',
-        entityType: 'Vendor',
-        entityId: input.vendorId,
-        actionTaken: 'Failed to complete assessment',
+        activityType: 'CASE_REVIEW',
+        entityType: 'Client',
+        entityId: input.clientId,
+        actionTaken: 'Failed to complete case review',
         status: 'FAILED',
         errorMessage,
         processingTimeMs: Date.now() - startTime,
       })
 
-      return this.createResult<AssessmentOutput>(false, undefined, errorMessage, startTime)
+      return this.createResult<CaseReviewOutput>(false, undefined, errorMessage, startTime)
     }
   }
 }

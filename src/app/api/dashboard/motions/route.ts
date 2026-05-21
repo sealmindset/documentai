@@ -8,7 +8,7 @@ export async function GET(request: Request) {
 
   const motions = await prisma.document.findMany({
     where: { documentType: { startsWith: 'MOTION' } },
-    include: { vendor: { select: { id: true, name: true, businessOwner: true, industry: true } } },
+    include: { client: { select: { id: true, name: true, businessOwner: true, industry: true } } },
     orderBy: { expirationDate: 'asc' },
   })
 
@@ -19,10 +19,10 @@ export async function GET(request: Request) {
       documentName: m.documentName,
       expirationDate: m.expirationDate?.toISOString() || null,
       status: m.status,
-      vendorId: m.vendor.id,
-      vendorName: m.vendor.name,
-      leadAttorney: m.vendor.businessOwner,
-      caseType: m.vendor.industry,
+      clientId: m.client.id,
+      clientName: m.client.name,
+      leadAttorney: m.client.businessOwner,
+      caseType: m.client.industry,
     })),
   })
 }

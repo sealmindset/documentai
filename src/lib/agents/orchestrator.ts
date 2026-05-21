@@ -14,10 +14,10 @@ import { aria, ARIAAgent } from './sara'
 import { rita, RITAAgent } from './rita'
 import { atlas, ATLASAgent } from './mars'
 import prisma from '@/lib/db'
-import type { AgentResult, VendorProfileInput, VendorProfileOutput } from './types'
+import type { AgentResult, ClientProfileInput, ClientProfileOutput } from './types'
 
 export interface WorkflowResult {
-  vendorId: string
+  clientId: string
   stages: {
     stage: string
     agent: string
@@ -47,9 +47,9 @@ export class AgentOrchestrator {
   }
 
   /**
-   * Execute full onboarding workflow for a new vendor
+   * Execute full onboarding workflow for a new client
    */
-  async onboardVendor(input: VendorProfileInput): Promise<WorkflowResult> {
+  async onboardClient(input: ClientProfileInput): Promise<WorkflowResult> {
     const stages: WorkflowResult['stages'] = []
     const nextActions: string[] = []
 
@@ -60,14 +60,14 @@ export class AgentOrchestrator {
       agent: 'LEXA',
       success: veraResult.success,
       summary: veraResult.success
-        ? `Risk Tier: ${veraResult.data?.riskTier}, Score: ${veraResult.data?.overallRiskScore}`
+        ? `Priority Tier: ${veraResult.data?.priorityTier}, Score: ${veraResult.data?.overallReviewScore}`
         : veraResult.error || 'Failed',
       timestamp: new Date(),
     })
 
     if (!veraResult.success || !veraResult.data) {
       return {
-        vendorId: input.vendorId,
+        clientId: input.clientId,
         stages,
         overallSuccess: false,
         nextActions: ['Review and retry party profiling'],
@@ -75,26 +75,26 @@ export class AgentOrchestrator {
     }
 
     // Stage 2: CLARA - Detailed Review (for Critical/High priority)
-    if (['CRITICAL', 'HIGH'].includes(veraResult.data.riskTier)) {
-      const vendor = await prisma.vendor.findUnique({
-        where: { id: input.vendorId },
+    if (['CRITICAL', 'HIGH'].includes(veraResult.data.priorityTier)) {
+      const client = await prisma.client.findUnique({
+        where: { id: input.clientId },
       })
 
-      if (vendor) {
-        const riskProfile = await prisma.riskProfile.findFirst({
-          where: { vendorId: input.vendorId },
+      if (client) {
+        const clientProfile = await prisma.clientProfile.findFirst({
+          where: { clientId: input.clientId },
           orderBy: { createdAt: 'desc' },
         })
 
         const caraResult = await this.clara.execute({
-          vendorId: input.vendorId,
-          riskProfileId: riskProfile?.id || '',
+          clientId: input.clientId,
+          clientProfileId: clientProfile?.id || '',
           assessmentType: 'INITIAL',
-          vendorInfo: {
-            name: vendor.name,
-            industry: vendor.industry || 'Unknown',
-            country: vendor.country || 'Unknown',
-            annualSpend: Number(vendor.annualSpend) || 0,
+          clientInfo: {
+            name: client.name,
+            industry: client.industry || 'Unknown',
+            country: client.country || 'Unknown',
+            annualSpend: Number(client.annualSpend) || 0,
           },
         })
 
@@ -103,7 +103,7 @@ export class AgentOrchestrator {
           agent: 'CLARA',
           success: caraResult.success,
           summary: caraResult.success
-            ? `Overall Score: ${caraResult.data?.overallScore}/5, Rating: ${caraResult.data?.riskRating}`
+            ? `Overall Score: ${caraResult.data?.overallScore}/5, Rating: ${caraResult.data?.reviewRating}`
             : caraResult.error || 'Failed',
           timestamp: new Date(),
         })
@@ -117,19 +117,19 @@ export class AgentOrchestrator {
     }
 
     // Stage 3: DORA - Document Request
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: input.vendorId },
+    const client = await prisma.client.findUnique({
+      where: { id: input.clientId },
     })
 
-    if (vendor?.primaryContactEmail) {
-      const requiredDocs = this.getRequiredDocuments(veraResult.data.riskTier)
+    if (client?.primaryContactEmail) {
+      const requiredDocs = this.getRequiredDocuments(veraResult.data.priorityTier)
       const dueDate = new Date()
       dueDate.setDate(dueDate.getDate() + 14)
 
       const doraResult = await this.dora.createDocumentRequest({
-        vendorId: input.vendorId,
-        vendorName: vendor.name,
-        vendorEmail: vendor.primaryContactEmail,
+        clientId: input.clientId,
+        clientName: client.name,
+        clientEmail: client.primaryContactEmail,
         requiredDocuments: requiredDocs,
         dueDate,
       })
@@ -152,9 +152,9 @@ export class AgentOrchestrator {
 
     // Generate initial report
     const ritaResult = await this.rita.execute({
-      vendorId: input.vendorId,
+      clientId: input.clientId,
       reportType: 'DETAILED_ASSESSMENT',
-      includeFindings: true,
+      includeIssues: true,
       includeTrends: false,
     })
 
@@ -176,7 +176,7 @@ export class AgentOrchestrator {
     }
 
     return {
-      vendorId: input.vendorId,
+      clientId: input.clientId,
       stages,
       overallSuccess,
       nextActions,
@@ -187,7 +187,7 @@ export class AgentOrchestrator {
    * Process uploaded document through analysis pipeline
    */
   async processDocument(
-    vendorId: string,
+    clientId: string,
     documentId: string,
     documentType: string,
     documentContent: string
@@ -195,39 +195,39 @@ export class AgentOrchestrator {
     const stages: WorkflowResult['stages'] = []
     const nextActions: string[] = []
 
-    // Get vendor context
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: vendorId },
+    // Get client context
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
       include: {
-        riskProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
+        clientProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
       },
     })
 
-    if (!vendor) {
+    if (!client) {
       return {
-        vendorId,
+        clientId,
         stages: [{
           stage: 'Initialization',
           agent: 'SYSTEM',
           success: false,
-          summary: 'Vendor not found',
+          summary: 'Client not found',
           timestamp: new Date(),
         }],
         overallSuccess: false,
-        nextActions: ['Verify vendor ID and retry'],
+        nextActions: ['Verify client ID and retry'],
       }
     }
 
     // Stage 1: ARIA - Document Analysis
     const saraResult = await this.aria.execute({
-      vendorId,
+      clientId,
       documentId,
       documentType,
       documentContent,
-      vendorContext: {
-        name: vendor.name,
-        riskTier: vendor.riskProfiles[0]?.riskTier || 'MEDIUM',
-        dataAccess: JSON.parse(vendor.riskProfiles[0]?.dataTypesAccessed || '[]') as string[],
+      clientContext: {
+        name: client.name,
+        priorityTier: client.clientProfiles[0]?.priorityTier || 'MEDIUM',
+        dataAccess: JSON.parse(client.clientProfiles[0]?.dataTypesAccessed || '[]') as string[],
       },
     })
 
@@ -243,7 +243,7 @@ export class AgentOrchestrator {
 
     if (!saraResult.success || !saraResult.data) {
       return {
-        vendorId,
+        clientId,
         stages,
         overallSuccess: false,
         nextActions: ['Review document format and retry analysis'],
@@ -256,32 +256,32 @@ export class AgentOrchestrator {
     )
 
     if (criticalHighFindings.length > 0) {
-      // Get the created findings from database
-      const dbFindings = await prisma.riskFinding.findMany({
+      // Get the created issues from database
+      const dbIssues = await prisma.issue.findMany({
         where: {
-          vendorId,
+          clientId,
           documentId,
           severity: { in: ['CRITICAL', 'HIGH'] },
         },
       })
 
-      for (const finding of dbFindings) {
+      for (const issue of dbIssues) {
         const marsResult = await this.atlas.execute({
-          findingId: finding.id,
-          vendorId,
-          finding: {
-            title: finding.title,
-            severity: finding.severity,
-            description: finding.description || '',
+          issueId: issue.id,
+          clientId,
+          issue: {
+            title: issue.title,
+            severity: issue.severity,
+            description: issue.description || '',
           },
-          vendorContact: {
-            name: vendor.primaryContactName || 'Vendor Contact',
-            email: vendor.primaryContactEmail || '',
+          clientContact: {
+            name: client.primaryContactName || 'Client Contact',
+            email: client.primaryContactEmail || '',
           },
         })
 
         stages.push({
-          stage: `Remediation Plan: ${finding.title.substring(0, 30)}...`,
+          stage: `Action Plan: ${issue.title.substring(0, 30)}...`,
           agent: 'ATLAS',
           success: marsResult.success,
           summary: marsResult.success
@@ -291,14 +291,14 @@ export class AgentOrchestrator {
         })
       }
 
-      nextActions.push(`Follow up on ${criticalHighFindings.length} critical/high findings`)
+      nextActions.push(`Follow up on ${criticalHighFindings.length} critical/high issues`)
     }
 
     // Stage 3: RITA - Generate updated report
     const ritaResult = await this.rita.execute({
-      vendorId,
+      clientId,
       reportType: 'DETAILED_ASSESSMENT',
-      includeFindings: true,
+      includeIssues: true,
       includeTrends: false,
     })
 
@@ -319,7 +319,7 @@ export class AgentOrchestrator {
     }
 
     return {
-      vendorId,
+      clientId,
       stages,
       overallSuccess,
       nextActions,
@@ -334,19 +334,19 @@ export class AgentOrchestrator {
     expiringDocuments: number
     upcomingAssessments: number
   }> {
-    // Check overdue remediation actions
+    // Check overdue action items
     const overdueResult = await this.atlas.checkOverdueActions()
     const overdueEscalations = overdueResult.data?.length || 0
 
-    // Check document inventory across all active vendors
-    const vendors = await prisma.vendor.findMany({
+    // Check document inventory across all active clients
+    const clients = await prisma.client.findMany({
       where: { status: 'ACTIVE' },
       select: { id: true },
     })
 
     let expiringDocuments = 0
-    for (const vendor of vendors) {
-      const inventoryResult = await this.dora.checkDocumentInventory(vendor.id)
+    for (const client of clients) {
+      const inventoryResult = await this.dora.checkDocumentInventory(client.id)
       if (inventoryResult.success && inventoryResult.data) {
         expiringDocuments += inventoryResult.data.expiringDocuments.length
       }
@@ -355,7 +355,7 @@ export class AgentOrchestrator {
     // Check upcoming assessments
     const nextMonth = new Date()
     nextMonth.setMonth(nextMonth.getMonth() + 1)
-    const upcomingAssessments = await prisma.riskProfile.count({
+    const upcomingAssessments = await prisma.clientProfile.count({
       where: {
         nextAssessmentDate: { lte: nextMonth },
       },
@@ -368,8 +368,8 @@ export class AgentOrchestrator {
     }
   }
 
-  private getRequiredDocuments(riskTier: string): string[] {
-    switch (riskTier) {
+  private getRequiredDocuments(priorityTier: string): string[] {
+    switch (priorityTier) {
       case 'CRITICAL':
         return [
           'SOC 2 Type II',

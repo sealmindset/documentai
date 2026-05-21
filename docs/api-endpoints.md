@@ -19,22 +19,22 @@ All API routes require JWT authentication unless noted. Permission requirements 
 
 | Method | Path | Permission | Description |
 |--------|------|------------|-------------|
-| GET | `/api/vendors` | `vendors:view` | List parties (filter by status, priorityTier, search; paginated) |
-| POST | `/api/vendors` | `vendors:create` | Create party |
-| GET | `/api/vendors/{id}` | `vendors:view` | Get party with profiles, reviews, documents, issues |
-| PUT | `/api/vendors/{id}` | `vendors:edit` | Update party |
-| DELETE | `/api/vendors/{id}` | `vendors:delete` | Soft delete (set status TERMINATED) |
+| GET | `/api/clients` | `clients:view` | List parties (filter by status, priorityTier, search; paginated) |
+| POST | `/api/clients` | `clients:create` | Create party |
+| GET | `/api/clients/{id}` | `clients:view` | Get party with profiles, reviews, documents, issues |
+| PUT | `/api/clients/{id}` | `clients:edit` | Update party |
+| DELETE | `/api/clients/{id}` | `clients:delete` | Soft delete (set status TERMINATED) |
 
-### GET /api/vendors Query Parameters
+### GET /api/clients Query Parameters
 | Param | Type | Description |
 |-------|------|-------------|
 | `status` | string | ACTIVE, INACTIVE, PENDING, TERMINATED |
-| `riskTier` | string | CRITICAL, HIGH, MEDIUM, LOW (maps to Priority Tier in UI) |
+| `priorityTier` | string | CRITICAL, HIGH, MEDIUM, LOW (maps to Priority Tier in UI) |
 | `search` | string | Search name or industry |
 | `page` | number | Page number (default 1) |
 | `limit` | number | Results per page (default 20) |
 
-### POST /api/vendors Body (Create Party)
+### POST /api/clients Body (Create Party)
 ```typescript
 {
   name: string                    // required, 1–255 chars
@@ -61,7 +61,7 @@ All API routes require JWT authentication unless noted. Permission requirements 
 
 | Method | Path | Permission | Description |
 |--------|------|------------|-------------|
-| GET | `/api/assessments` | `assessments:view` | List document reviews (filter by vendorId, status, type) |
+| GET | `/api/case-reviews` | `case-reviews:view` | List document reviews (filter by clientId, status, type) |
 
 ### Response includes
 Party name, review type (INITIAL/ANNUAL/TRIGGERED/RENEWAL), status, overall score, review rating, issue count.
@@ -72,7 +72,7 @@ Party name, review type (INITIAL/ANNUAL/TRIGGERED/RENEWAL), status, overall scor
 
 | Method | Path | Permission | Description |
 |--------|------|------------|-------------|
-| GET | `/api/documents` | `documents:view` | List documents (filter by vendorId, status, type) |
+| GET | `/api/documents` | `documents:view` | List documents (filter by clientId, status, type) |
 | POST | `/api/documents` | `documents:create` | Create document record |
 | POST | `/api/documents/analyze` | `documents:edit` | Upload + AI analysis (multipart/form-data) |
 
@@ -81,7 +81,7 @@ SOC2_TYPE1, SOC2_TYPE2, ISO27001, PENTEST, VULNERABILITY_SCAN, SIG_QUESTIONNAIRE
 
 ### POST /api/documents/analyze
 - **Content-Type:** `multipart/form-data`
-- **Fields:** `file` (PDF, DOCX, XLSX, image; max 50MB), `vendorId` (optional, maps to party)
+- **Fields:** `file` (PDF, DOCX, XLSX, image; max 50MB), `clientId` (optional, maps to party)
 - **Rate limited:** Yes
 - Returns document record + AI analysis (type classification, summary, key findings, risk factors, recommended rating)
 
@@ -91,12 +91,12 @@ SOC2_TYPE1, SOC2_TYPE2, ISO27001, PENTEST, VULNERABILITY_SCAN, SIG_QUESTIONNAIRE
 
 | Method | Path | Permission | Description |
 |--------|------|------------|-------------|
-| GET | `/api/findings` | `findings:view` | List issues (advanced filtering + pagination) |
+| GET | `/api/issues` | `issues:view` | List issues (advanced filtering + pagination) |
 
-### GET /api/findings Query Parameters
+### GET /api/issues Query Parameters
 | Param | Type | Description |
 |-------|------|-------------|
-| `vendorId` | string | Filter by party |
+| `clientId` | string | Filter by party |
 | `severity` | string | CRITICAL, HIGH, MEDIUM, LOW, ALL |
 | `status` | string | OPEN, IN_REMEDIATION, PENDING_VERIFICATION, RESOLVED, ACCEPTED, CLOSED, ALL |
 | `category` | string | Filter by category |

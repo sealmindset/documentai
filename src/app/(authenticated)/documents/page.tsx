@@ -18,7 +18,7 @@ import {
 
 interface Document {
   id: string
-  vendorId: string
+  clientId: string
   documentType: string
   documentName: string
   fileSize: number | null
@@ -29,8 +29,8 @@ interface Document {
   retrievedBy: string | null
   source: string | null
   isCurrent: boolean
-  vendor: { id: string; name: string }
-  _count: { riskFindings: number }
+  client: { id: string; name: string }
+  _count: { issues: number }
 }
 
 const statusVariant = (s: string) => {
@@ -100,15 +100,15 @@ export default function DocumentsPage() {
       ),
     },
     {
-      key: 'vendor.name',
-      header: 'Party',
+      key: 'client.name',
+      header: 'Client',
       sortable: true,
       filterable: true,
-      filterValue: (row) => row.vendor.name,
+      filterValue: (row) => row.client.name,
       render: (row) => (
         <div className="flex items-center gap-2">
           <Building2 className="h-4 w-4 text-gray-400" />
-          <span>{row.vendor.name}</span>
+          <span>{row.client.name}</span>
         </div>
       ),
     },
@@ -129,12 +129,12 @@ export default function DocumentsPage() {
       render: (row) => formatFileSize(row.fileSize),
     },
     {
-      key: '_count.riskFindings',
-      header: 'Findings',
+      key: '_count.issues',
+      header: 'Issues',
       sortable: true,
       searchable: false,
       className: 'text-center',
-      render: (row) => row._count.riskFindings,
+      render: (row) => row._count.issues,
     },
     {
       key: 'retrievedBy',
@@ -257,7 +257,7 @@ export default function DocumentsPage() {
             emptyIcon={<FileText className="h-12 w-12 text-gray-300 mb-3" />}
             emptyTitle="No documents yet"
             emptyDescription="Documents will appear here when uploaded or retrieved by DORA."
-            onRowClick={(row) => router.push(`/parties/${row.vendor.id}`)}
+            onRowClick={(row) => router.push(`/clients/${row.client.id}`)}
           />
         </CardContent>
       </Card>

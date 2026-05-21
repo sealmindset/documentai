@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { aiRateLimit } from '@/lib/ai/rate-limit'
 import { sanitizeAIError } from '@/lib/ai/errors'
 import { AgentOrchestrator } from '@/lib/agents/orchestrator'
-import type { VendorProfileInput } from '@/lib/agents/types'
+import type { ClientProfileInput } from '@/lib/agents/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,8 +19,8 @@ interface ConfirmDocument {
 
 interface ConfirmBody {
   action: 'create_new' | 'use_existing' | 'reassess'
-  existingVendorId?: string
-  vendorData?: {
+  existingClientId?: string
+  clientData?: {
     name: string
     legalName?: string
     dunsNumber?: string
@@ -46,8 +46,8 @@ interface ConfirmBody {
 }
 
 export async function POST(request: Request) {
-  // Require both vendor creation and agent execution permissions
-  const denied = await requirePermission('vendors', 'create')
+  // Require both client creation and agent execution permissions
+  const denied = await requirePermission('clients', 'create')
   if (denied) return denied
   const agentDenied = await requirePermission('agents', 'create')
   if (agentDenied) return agentDenied
@@ -60,58 +60,58 @@ export async function POST(request: Request) {
 
   try {
     const body: ConfirmBody = await request.json()
-    const { action, existingVendorId, vendorData, documents } = body
+    const { action, existingClientId, clientData, documents } = body
 
     if (!documents || documents.length === 0) {
       return NextResponse.json({ error: 'At least one document is required' }, { status: 400 })
     }
 
-    let vendorId: string
+    let clientId: string
 
     if (action === 'create_new') {
-      if (!vendorData?.name) {
-        return NextResponse.json({ error: 'Vendor name is required' }, { status: 400 })
+      if (!clientData?.name) {
+        return NextResponse.json({ error: 'Client name is required' }, { status: 400 })
       }
 
-      const vendor = await prisma.vendor.create({
+      const client = await prisma.client.create({
         data: {
-          name: vendorData.name,
-          legalName: vendorData.legalName || null,
-          dunsNumber: vendorData.dunsNumber || null,
-          website: vendorData.website || null,
-          industry: vendorData.industry || null,
-          country: vendorData.country || null,
-          stateProvince: vendorData.stateProvince || null,
-          primaryContactName: vendorData.primaryContactName || null,
-          primaryContactEmail: vendorData.primaryContactEmail || null,
-          primaryContactPhone: vendorData.primaryContactPhone || null,
-          businessOwner: vendorData.businessOwner || null,
-          itOwner: vendorData.itOwner || null,
-          annualSpend: vendorData.annualSpend || null,
+          name: clientData.name,
+          legalName: clientData.legalName || null,
+          dunsNumber: clientData.dunsNumber || null,
+          website: clientData.website || null,
+          industry: clientData.industry || null,
+          country: clientData.country || null,
+          stateProvince: clientData.stateProvince || null,
+          primaryContactName: clientData.primaryContactName || null,
+          primaryContactEmail: clientData.primaryContactEmail || null,
+          primaryContactPhone: clientData.primaryContactPhone || null,
+          businessOwner: clientData.businessOwner || null,
+          itOwner: clientData.itOwner || null,
+          annualSpend: clientData.annualSpend || null,
           status: 'PENDING',
         },
       })
-      vendorId = vendor.id
+      clientId = client.id
 
       // Audit trail
       await prisma.auditTrail.create({
         data: {
           userId: user?.id || 'system',
           action: 'CREATE',
-          entityType: 'Vendor',
-          entityId: vendor.id,
-          newValues: JSON.stringify(vendorData),
+          entityType: 'Client',
+          entityId: client.id,
+          newValues: JSON.stringify(clientData),
         },
       })
-    } else if ((action === 'use_existing' || action === 'reassess') && existingVendorId) {
-      const existing = await prisma.vendor.findUnique({ where: { id: existingVendorId } })
+    } else if ((action === 'use_existing' || action === 'reassess') && existingClientId) {
+      const existing = await prisma.client.findUnique({ where: { id: existingClientId } })
       if (!existing) {
-        return NextResponse.json({ error: 'Vendor not found' }, { status: 404 })
+        return NextResponse.json({ error: 'Client not found' }, { status: 404 })
       }
-      vendorId = existingVendorId
+      clientId = existingClientId
     } else {
       return NextResponse.json(
-        { error: 'Invalid action or missing vendorId' },
+        { error: 'Invalid action or missing clientId' },
         { status: 400 }
       )
     }
@@ -121,13 +121,13 @@ export async function POST(request: Request) {
     for (const doc of documents) {
       // Mark previous versions as not current
       await prisma.document.updateMany({
-        where: { vendorId, documentType: doc.documentType, isCurrent: true },
+        where: { clientId, documentType: doc.documentType, isCurrent: true },
         data: { isCurrent: false },
       })
 
       const dbDoc = await prisma.document.create({
         data: {
-          vendorId,
+          clientId,
           documentName: doc.fileName,
           documentType: doc.documentType || 'OTHER',
           mimeType: doc.mimeType,
@@ -141,13 +141,13 @@ export async function POST(request: Request) {
       })
       createdDocs.push(dbDoc)
 
-      // Create risk findings from analysis
+      // Create issues from analysis
       const analysis = doc.analysisResult
       const riskFactors = (analysis?.riskFactors as string[]) || []
       for (const risk of riskFactors) {
-        await prisma.riskFinding.create({
+        await prisma.issue.create({
           data: {
-            vendorId,
+            clientId,
             documentId: dbDoc.id,
             title: risk,
             severity: analysis?.recommendedRating === 'CRITICAL' ? 'HIGH' : 'MEDIUM',
@@ -164,11 +164,11 @@ export async function POST(request: Request) {
 
     if (action === 'create_new') {
       // Full onboarding: LEXA → CLARA → DORA → RITA
-      const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } })
-      const orchestratorInput: VendorProfileInput = {
-        vendorId,
-        vendorName: vendor?.name || vendorData?.name || '',
-        industry: vendorData?.industry,
+      const client = await prisma.client.findUnique({ where: { id: clientId } })
+      const orchestratorInput: ClientProfileInput = {
+        clientId: clientId,
+        clientName: client?.name || clientData?.name || '',
+        industry: clientData?.industry,
         dataTypesAccessed: body.dataTypesAccessed || [],
         systemIntegrations: body.systemIntegrations || [],
         hasPiiAccess: body.hasPiiAccess || false,
@@ -181,10 +181,10 @@ export async function POST(request: Request) {
       }
 
       try {
-        workflowResult = await orchestrator.onboardVendor(orchestratorInput)
+        workflowResult = await orchestrator.onboardClient(orchestratorInput)
       } catch (err) {
         console.error('Orchestrator onboarding error:', err)
-        workflowResult = { vendorId, stages: [], overallSuccess: false, nextActions: ['Retry assessment manually'] }
+        workflowResult = { clientId, stages: [], overallSuccess: false, nextActions: ['Retry assessment manually'] }
       }
     } else if (action === 'reassess') {
       // Process each document through ARIA → ATLAS → RITA
@@ -192,7 +192,7 @@ export async function POST(request: Request) {
         const matchingUpload = documents.find(d => d.fileName === dbDoc.documentName)
         try {
           const result = await orchestrator.processDocument(
-            vendorId,
+            clientId,
             dbDoc.id,
             dbDoc.documentType,
             matchingUpload?.extractedText?.slice(0, 100000) || ''
@@ -204,16 +204,16 @@ export async function POST(request: Request) {
       }
     }
 
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: vendorId },
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
       include: {
-        riskProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
+        clientProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
         documents: { where: { isCurrent: true } },
       },
     })
 
     return NextResponse.json({
-      vendor,
+      client,
       documents: createdDocs,
       workflow: workflowResult,
     })

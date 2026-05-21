@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-    const vendorId = formData.get('vendorId') as string
+    const clientId = formData.get('clientId') as string
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -133,10 +133,10 @@ export async function POST(request: Request) {
     }
 
     // Store document in database
-    if (vendorId) {
+    if (clientId) {
       const document = await prisma.document.create({
         data: {
-          vendorId,
+          clientId,
           documentName: file.name,
           documentType: analysis.documentType || 'OTHER',
           mimeType: file.type,
@@ -150,9 +150,9 @@ export async function POST(request: Request) {
       // Create findings
       if (analysis.riskFactors?.length > 0) {
         for (const risk of analysis.riskFactors) {
-          await prisma.riskFinding.create({
+          await prisma.issue.create({
             data: {
-              vendorId,
+              clientId,
               documentId: document.id,
               title: risk,
               severity: analysis.recommendedRating === 'CRITICAL' ? 'HIGH' : 'MEDIUM',

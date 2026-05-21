@@ -12,20 +12,20 @@ export async function GET(request: Request) {
   const now = new Date()
   const cutoff = new Date(now.getTime() + days * 24 * 60 * 60 * 1000)
 
-  const [documents, findings, actions] = await Promise.all([
+  const [documents, issues, actions] = await Promise.all([
     prisma.document.findMany({
       where: { expirationDate: { gte: now, lte: cutoff }, status: { not: 'EXPIRED' } },
-      include: { vendor: { select: { id: true, name: true } } },
+      include: { client: { select: { id: true, name: true } } },
       orderBy: { expirationDate: 'asc' },
     }),
-    prisma.riskFinding.findMany({
+    prisma.issue.findMany({
       where: { dueDate: { gte: now, lte: cutoff }, status: { notIn: ['CLOSED', 'RESOLVED'] } },
-      include: { vendor: { select: { id: true, name: true } } },
+      include: { client: { select: { id: true, name: true } } },
       orderBy: { dueDate: 'asc' },
     }),
-    prisma.remediationAction.findMany({
+    prisma.actionItem.findMany({
       where: { dueDate: { gte: now, lte: cutoff }, status: { notIn: ['CLOSED', 'VERIFIED'] } },
-      include: { vendor: { select: { id: true, name: true } } },
+      include: { client: { select: { id: true, name: true } } },
       orderBy: { dueDate: 'asc' },
     }),
   ])
@@ -36,17 +36,17 @@ export async function GET(request: Request) {
       date: d.expirationDate!.toISOString(),
       type: d.documentType.startsWith('MOTION') ? 'motion_hearing' : 'document_deadline',
       title: d.documentName,
-      vendorId: d.vendor.id,
-      vendorName: d.vendor.name,
+      clientId: d.client.id,
+      clientName: d.client.name,
       status: d.status,
     })),
-    ...findings.map((f) => ({
+    ...issues.map((f) => ({
       id: f.id,
       date: f.dueDate!.toISOString(),
       type: 'issue_deadline',
       title: f.title,
-      vendorId: f.vendor.id,
-      vendorName: f.vendor.name,
+      clientId: f.client.id,
+      clientName: f.client.name,
       status: f.status,
     })),
     ...actions.map((a) => ({
@@ -54,8 +54,8 @@ export async function GET(request: Request) {
       date: a.dueDate!.toISOString(),
       type: 'action_deadline',
       title: a.title,
-      vendorId: a.vendor.id,
-      vendorName: a.vendor.name,
+      clientId: a.client.id,
+      clientName: a.client.name,
       status: a.status,
     })),
   ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())

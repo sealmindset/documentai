@@ -14,8 +14,8 @@ interface Motion {
   documentName: string
   expirationDate: string | null
   status: string
-  vendorId: string
-  vendorName: string
+  clientId: string
+  clientName: string
   leadAttorney: string | null
   caseType: string | null
 }
@@ -45,7 +45,7 @@ export default function MotionsPage() {
       key: 'documentType', header: 'Motion Type', sortable: true, filterable: true,
       render: (row) => formatMotionType(row.documentType),
     },
-    { key: 'vendorName', header: 'Case', sortable: true, filterable: true },
+    { key: 'clientName', header: 'Case', sortable: true, filterable: true },
     {
       key: 'expirationDate', header: 'Hearing Date', sortable: true,
       render: (row) => row.expirationDate

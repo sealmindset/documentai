@@ -47,7 +47,7 @@ export async function GET(
         emails: true,
         caseContacts: {
           include: {
-            vendor: {
+            client: {
               select: {
                 id: true,
                 name: true,

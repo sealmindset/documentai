@@ -2,7 +2,7 @@
  * PII Masker
  *
  * Pseudonymizes personal identifiers before AI submission,
- * restores them in the response. Vendor business data (risk scores,
+ * restores them in the response. Client business data (review scores,
  * contract dates, spend) is NOT masked -- it's needed for accurate analysis.
  */
 

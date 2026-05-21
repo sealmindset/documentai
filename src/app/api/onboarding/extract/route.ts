@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
     if (!result.success || !result.data) {
       return NextResponse.json(
-        { error: result.error || 'Failed to extract vendor information' },
+        { error: result.error || 'Failed to extract client information' },
         { status: 500 }
       )
     }
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       fileSize: file.size,
       mimeType: file.type,
       extractedText: extracted.text.slice(0, 5000),
-      vendorInfo: result.data.vendorInfo || {},
+      clientInfo: result.data.clientInfo || {},
       confidence: result.data.confidence || {},
       documentAnalysis: result.data.documentAnalysis || {},
     })

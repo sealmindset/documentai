@@ -45,7 +45,7 @@ interface ContactEmail {
 interface CaseLink {
   id: string
   role: string
-  vendor: {
+  client: {
     id: string
     name: string
     status: string
@@ -471,22 +471,22 @@ export default function ContactsPage() {
                       {selected.caseContacts.map((cc) => (
                         <Link
                           key={cc.id}
-                          href={`/parties/${cc.vendor.id}`}
+                          href={`/clients/${cc.client.id}`}
                           className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors"
                           onClick={() => setSelected(null)}
                         >
                           <div>
-                            <span className="text-sm font-medium">{cc.vendor.name}</span>
-                            {cc.vendor.dunsNumber && (
-                              <span className="text-xs text-gray-500 ml-2 font-mono">{cc.vendor.dunsNumber}</span>
+                            <span className="text-sm font-medium">{cc.client.name}</span>
+                            {cc.client.dunsNumber && (
+                              <span className="text-xs text-gray-500 ml-2 font-mono">{cc.client.dunsNumber}</span>
                             )}
-                            {cc.vendor.industry && (
-                              <div className="text-xs text-gray-500">{cc.vendor.industry}</div>
+                            {cc.client.industry && (
+                              <div className="text-xs text-gray-500">{cc.client.industry}</div>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant={roleBadge(cc.role) as any} className="text-xs">{roleLabel(cc.role)}</Badge>
-                            <Badge variant={statusBadge(cc.vendor.status) as any} className="text-xs">{cc.vendor.status}</Badge>
+                            <Badge variant={statusBadge(cc.client.status) as any} className="text-xs">{cc.client.status}</Badge>
                           </div>
                         </Link>
                       ))}

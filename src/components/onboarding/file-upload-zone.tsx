@@ -111,7 +111,7 @@ export function FileUploadZone({ files, onFilesAdded, onFileRemove, disabled }: 
       >
         <Upload className="h-10 w-10 text-gray-400 mx-auto mb-3" />
         <p className="text-sm font-medium text-gray-700">
-          Drop vendor documents here, or click to browse
+          Drop client documents here, or click to browse
         </p>
         <p className="text-xs text-gray-500 mt-1">
           PDF, DOCX, XLSX, images, or text files — up to 50MB each

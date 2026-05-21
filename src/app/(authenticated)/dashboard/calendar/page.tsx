@@ -13,8 +13,8 @@ interface CalendarEvent {
   date: string
   type: string
   title: string
-  vendorId: string
-  vendorName: string
+  clientId: string
+  clientName: string
   status: string
 }
 
@@ -74,7 +74,7 @@ export default function CalendarPage() {
       render: (row) => <Badge variant={eventTypeBadge(row.type) as any}>{eventTypeLabel(row.type)}</Badge>,
     },
     { key: 'title', header: 'Title', sortable: true, filterable: true },
-    { key: 'vendorName', header: 'Case', sortable: true, filterable: true },
+    { key: 'clientName', header: 'Case', sortable: true, filterable: true },
     {
       key: 'status', header: 'Status', sortable: true, filterable: true,
       render: (row) => <Badge variant="outline">{row.status}</Badge>,

@@ -8,17 +8,17 @@ export async function GET() {
 
   try {
     const [
-      totalVendors,
-      activeAssessments,
+      totalClients,
+      activeCaseReviews,
       pendingReviews,
-      criticalFindings,
-      highFindings,
+      criticalIssues,
+      highIssues,
     ] = await Promise.all([
-      prisma.vendor.count({ where: { status: 'ACTIVE' } }),
-      prisma.riskAssessment.count({ where: { assessmentStatus: 'IN_PROGRESS' } }),
-      prisma.riskAssessment.count({ where: { assessmentStatus: 'PENDING_REVIEW' } }),
-      prisma.riskFinding.count({ where: { severity: 'CRITICAL', status: 'OPEN' } }),
-      prisma.riskFinding.count({ where: { severity: 'HIGH', status: 'OPEN' } }),
+      prisma.client.count({ where: { status: 'ACTIVE' } }),
+      prisma.caseReview.count({ where: { assessmentStatus: 'IN_PROGRESS' } }),
+      prisma.caseReview.count({ where: { assessmentStatus: 'PENDING_REVIEW' } }),
+      prisma.issue.count({ where: { severity: 'CRITICAL', status: 'OPEN' } }),
+      prisma.issue.count({ where: { severity: 'HIGH', status: 'OPEN' } }),
     ])
 
     // Completed this month
@@ -26,7 +26,7 @@ export async function GET() {
     startOfMonth.setDate(1)
     startOfMonth.setHours(0, 0, 0, 0)
 
-    const completedThisMonth = await prisma.riskAssessment.count({
+    const completedThisMonth = await prisma.caseReview.count({
       where: {
         assessmentStatus: 'COMPLETE',
         updatedAt: { gte: startOfMonth },
@@ -34,22 +34,22 @@ export async function GET() {
     })
 
     return NextResponse.json({
-      totalVendors,
-      activeAssessments,
+      totalClients,
+      activeCaseReviews,
       pendingReviews,
-      criticalFindings,
-      highFindings,
+      criticalIssues,
+      highIssues,
       completedThisMonth,
     })
   } catch (error) {
     console.error('Dashboard stats error:', error)
     // Return demo data if database not available
     return NextResponse.json({
-      totalVendors: 47,
-      activeAssessments: 12,
+      totalClients: 47,
+      activeCaseReviews: 12,
       pendingReviews: 8,
-      criticalFindings: 3,
-      highFindings: 15,
+      criticalIssues: 3,
+      highIssues: 15,
       completedThisMonth: 5,
     })
   }

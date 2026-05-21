@@ -8,7 +8,7 @@ import prisma from '@/lib/db'
 import { z } from 'zod'
 
 const profileRequestSchema = z.object({
-  vendorId: z.string(),
+  clientId: z.string(),
   dataTypesAccessed: z.array(z.string()).default([]),
   systemIntegrations: z.array(z.string()).default([]),
   hasPiiAccess: z.boolean().default(false),
@@ -38,27 +38,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = profileRequestSchema.parse(body)
 
-    // Get vendor info
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: validated.vendorId },
+    // Get client info
+    const client = await prisma.client.findUnique({
+      where: { id: validated.clientId },
     })
 
-    if (!vendor) {
-      return NextResponse.json({ error: 'Vendor not found' }, { status: 404 })
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
     // Execute LEXA agent
     const result = await lexa.execute({
-      vendorId: validated.vendorId,
-      vendorName: vendor.name,
-      industry: vendor.industry || undefined,
+      clientId: validated.clientId,
+      clientName: client.name,
+      industry: client.industry || undefined,
       dataTypesAccessed: validated.dataTypesAccessed,
       systemIntegrations: validated.systemIntegrations,
       hasPiiAccess: validated.hasPiiAccess,
       hasPhiAccess: validated.hasPhiAccess,
       hasPciAccess: validated.hasPciAccess,
       businessCriticality: validated.businessCriticality,
-      annualSpend: vendor.annualSpend ? Number(vendor.annualSpend) : undefined,
+      annualSpend: client.annualSpend ? Number(client.annualSpend) : undefined,
       additionalContext: validated.additionalContext,
     })
 
@@ -69,9 +69,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update vendor status to ACTIVE if profiling successful
-    await prisma.vendor.update({
-      where: { id: validated.vendorId },
+    // Update client status to ACTIVE if profiling successful
+    await prisma.client.update({
+      where: { id: validated.clientId },
       data: { status: 'ACTIVE' },
     })
 

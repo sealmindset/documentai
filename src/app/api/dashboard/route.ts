@@ -18,17 +18,17 @@ export async function GET(request: NextRequest) {
 
     const [
       // 1. Pipeline
-      vendorsByStatus,
+      clientsByStatus,
       // 2. Cases by type
-      vendorsWithIndustry,
+      clientsWithIndustry,
       // 3. Deadline counts — documents (3 buckets)
       docDeadline30,
       docDeadline90,
       docDeadline180,
-      // 3. Deadline counts — findings (3 buckets)
-      findingDeadline30,
-      findingDeadline90,
-      findingDeadline180,
+      // 3. Deadline counts — issues (3 buckets)
+      issueDeadline30,
+      issueDeadline90,
+      issueDeadline180,
       // 3. Deadline counts — actions (3 buckets)
       actionDeadline30,
       actionDeadline90,
@@ -40,25 +40,25 @@ export async function GET(request: NextRequest) {
       // 6. Billing
       billingTotal,
       billingByStatus,
-      // 7. Court calendar — documents, findings, actions in next 30 days
+      // 7. Court calendar — documents, issues, actions in next 30 days
       calendarDocuments,
-      calendarFindings,
+      calendarIssues,
       calendarActions,
       // 8. Alert inputs
-      criticalVendors,
+      criticalClients,
       overdueActions,
       expiringDocuments,
-      criticalFindings,
+      criticalIssues,
       newCasesPendingIntake,
       motionsDue7Days,
       // 9. Recent activity
       recentActivity,
     ] = await Promise.all([
-      // 1. Pipeline: vendor counts grouped by status
-      prisma.vendor.groupBy({ by: ['status'], _count: { _all: true } }),
+      // 1. Pipeline: client counts grouped by status
+      prisma.client.groupBy({ by: ['status'], _count: { _all: true } }),
 
-      // 2. Cases by type: all vendors with industry field
-      prisma.vendor.findMany({ select: { industry: true } }),
+      // 2. Cases by type: all clients with industry field
+      prisma.client.findMany({ select: { industry: true } }),
 
       // 3. Deadline counts — documents per exclusive bucket
       prisma.document.count({
@@ -70,77 +70,77 @@ export async function GET(request: NextRequest) {
       prisma.document.count({
         where: { expirationDate: { gte: day91, lte: day180 }, status: { not: 'EXPIRED' } },
       }),
-      // 3. Deadline counts — findings per exclusive bucket
-      prisma.riskFinding.count({
+      // 3. Deadline counts — issues per exclusive bucket
+      prisma.issue.count({
         where: { dueDate: { gte: now, lte: day30 }, status: { notIn: ['CLOSED', 'RESOLVED'] } },
       }),
-      prisma.riskFinding.count({
+      prisma.issue.count({
         where: { dueDate: { gte: day31, lte: day90 }, status: { notIn: ['CLOSED', 'RESOLVED'] } },
       }),
-      prisma.riskFinding.count({
+      prisma.issue.count({
         where: { dueDate: { gte: day91, lte: day180 }, status: { notIn: ['CLOSED', 'RESOLVED'] } },
       }),
       // 3. Deadline counts — actions per exclusive bucket
-      prisma.remediationAction.count({
+      prisma.actionItem.count({
         where: { dueDate: { gte: now, lte: day30 }, status: { notIn: ['CLOSED', 'VERIFIED'] } },
       }),
-      prisma.remediationAction.count({
+      prisma.actionItem.count({
         where: { dueDate: { gte: day31, lte: day90 }, status: { notIn: ['CLOSED', 'VERIFIED'] } },
       }),
-      prisma.remediationAction.count({
+      prisma.actionItem.count({
         where: { dueDate: { gte: day91, lte: day180 }, status: { notIn: ['CLOSED', 'VERIFIED'] } },
       }),
 
       // 4. Motions
       prisma.document.findMany({
         where: { documentType: { startsWith: 'MOTION' } },
-        include: { vendor: { select: { id: true, name: true } } },
+        include: { client: { select: { id: true, name: true } } },
         orderBy: { expirationDate: 'asc' },
       }),
 
       // 5. Caseload by attorney
-      prisma.vendor.groupBy({
+      prisma.client.groupBy({
         by: ['businessOwner'],
         where: { status: { notIn: ['CLOSED'] }, businessOwner: { not: null } },
         _count: { _all: true },
       }),
 
       // 6. Billing — total
-      prisma.vendor.aggregate({ _sum: { annualSpend: true } }),
+      prisma.client.aggregate({ _sum: { annualSpend: true } }),
       // 6. Billing — by status
-      prisma.vendor.groupBy({ by: ['status'], _sum: { annualSpend: true } }),
+      prisma.client.groupBy({ by: ['status'], _sum: { annualSpend: true } }),
 
       // 7. Court calendar — documents in next 30 days
       prisma.document.findMany({
         where: { expirationDate: { gte: now, lte: day30 }, status: { not: 'EXPIRED' } },
-        include: { vendor: { select: { id: true, name: true } } },
+        include: { client: { select: { id: true, name: true } } },
         orderBy: { expirationDate: 'asc' },
       }),
-      // 7. Court calendar — findings in next 30 days
-      prisma.riskFinding.findMany({
+      // 7. Court calendar — issues in next 30 days
+      prisma.issue.findMany({
         where: { dueDate: { gte: now, lte: day30 }, status: { notIn: ['CLOSED', 'RESOLVED'] } },
-        include: { vendor: { select: { id: true, name: true } } },
+        include: { client: { select: { id: true, name: true } } },
         orderBy: { dueDate: 'asc' },
       }),
       // 7. Court calendar — actions in next 30 days
-      prisma.remediationAction.findMany({
+      prisma.actionItem.findMany({
         where: { dueDate: { gte: now, lte: day30 }, status: { notIn: ['CLOSED', 'VERIFIED'] } },
-        include: { vendor: { select: { id: true, name: true } } },
+        include: { client: { select: { id: true, name: true } } },
         orderBy: { dueDate: 'asc' },
       }),
 
       // 8. Alert inputs
-      prisma.riskProfile.count({ where: { riskTier: 'CRITICAL', vendor: { status: 'ACTIVE' } } }),
-      prisma.remediationAction.count({
+      prisma.clientProfile.count({ where: { priorityTier: 'CRITICAL', client: { status: 'ACTIVE' } } }),
+      prisma.actionItem.count({
         where: { status: { in: ['OPEN', 'IN_PROGRESS'] }, dueDate: { lt: now } },
       }),
       prisma.document.count({
         where: { expirationDate: { lte: day30, gt: now }, status: { not: 'EXPIRED' } },
       }),
-      prisma.riskFinding.count({
+      prisma.issue.count({
         where: { severity: { in: ['CRITICAL', 'HIGH'] }, status: { not: 'CLOSED' } },
       }),
-      prisma.vendor.count({
+      prisma.client.count({
         where: { status: 'NEW', createdAt: { lt: day7ago } },
       }),
       prisma.document.count({
@@ -171,13 +171,13 @@ export async function GET(request: NextRequest) {
     for (const s of pipelineStatuses) {
       pipeline[s] = 0
     }
-    for (const item of vendorsByStatus) {
+    for (const item of clientsByStatus) {
       pipeline[item.status] = (pipeline[item.status] || 0) + item._count._all
     }
 
     // 2. Cases by type — parse industry field, split on ' — '
     const categoryMap: Record<string, number> = {}
-    for (const v of vendorsWithIndustry) {
+    for (const v of clientsWithIndustry) {
       const category = v.industry?.split(' — ')[0]?.trim() || 'Unknown'
       categoryMap[category] = (categoryMap[category] || 0) + 1
     }
@@ -187,9 +187,9 @@ export async function GET(request: NextRequest) {
 
     // 3. Deadline counts — sum all three sources per bucket
     const deadlines = {
-      next30: docDeadline30 + findingDeadline30 + actionDeadline30,
-      next90: docDeadline90 + findingDeadline90 + actionDeadline90,
-      next180: docDeadline180 + findingDeadline180 + actionDeadline180,
+      next30: docDeadline30 + issueDeadline30 + actionDeadline30,
+      next90: docDeadline90 + issueDeadline90 + actionDeadline90,
+      next180: docDeadline180 + issueDeadline180 + actionDeadline180,
     }
 
     // 4. Motions — format response
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
         documentType: m.documentType,
         expirationDate: m.expirationDate?.toISOString() || null,
         status: m.status,
-        vendor: { id: m.vendor.id, name: m.vendor.name },
+        client: { id: m.client.id, name: m.client.name },
       })),
     }
 
@@ -233,29 +233,29 @@ export async function GET(request: NextRequest) {
         date: d.expirationDate!.toISOString(),
         type: d.documentType.startsWith('MOTION') ? 'motion_hearing' : 'document_deadline',
         title: d.documentName,
-        vendorName: d.vendor.name,
-        vendorId: d.vendor.id,
+        clientName: d.client.name,
+        clientId: d.client.id,
       })),
-      ...calendarFindings.map((f) => ({
+      ...calendarIssues.map((f) => ({
         date: f.dueDate!.toISOString(),
         type: 'issue_deadline',
         title: f.title,
-        vendorName: f.vendor.name,
-        vendorId: f.vendor.id,
+        clientName: f.client.name,
+        clientId: f.client.id,
       })),
       ...calendarActions.map((a) => ({
         date: a.dueDate!.toISOString(),
         type: 'action_deadline',
         title: a.title,
-        vendorName: a.vendor.name,
-        vendorId: a.vendor.id,
+        clientName: a.client.name,
+        clientId: a.client.id,
       })),
     ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
     // 8. Alerts
     const alerts = generateAlerts({
-      criticalVendors,
-      criticalFindings,
+      criticalClients,
+      criticalIssues,
       overdueActions,
       expiringDocuments,
       newCasesPendingIntake,
@@ -293,8 +293,8 @@ export async function GET(request: NextRequest) {
 }
 
 function generateAlerts(data: {
-  criticalVendors: number
-  criticalFindings: number
+  criticalClients: number
+  criticalIssues: number
   overdueActions: number
   expiringDocuments: number
   newCasesPendingIntake: number
@@ -302,18 +302,18 @@ function generateAlerts(data: {
 }) {
   const alerts: { type: string; message: string; severity: string }[] = []
 
-  if (data.criticalVendors > 0) {
+  if (data.criticalClients > 0) {
     alerts.push({
-      type: 'CRITICAL_VENDORS',
-      message: `${data.criticalVendors} party/parties classified as critical priority`,
+      type: 'CRITICAL_CLIENTS',
+      message: `${data.criticalClients} party/parties classified as critical priority`,
       severity: 'critical',
     })
   }
 
-  if (data.criticalFindings > 0) {
+  if (data.criticalIssues > 0) {
     alerts.push({
-      type: 'CRITICAL_FINDINGS',
-      message: `${data.criticalFindings} critical/high findings require attention`,
+      type: 'CRITICAL_ISSUES',
+      message: `${data.criticalIssues} critical/high issues require attention`,
       severity: 'high',
     })
   }
@@ -321,7 +321,7 @@ function generateAlerts(data: {
   if (data.overdueActions > 0) {
     alerts.push({
       type: 'OVERDUE_ACTIONS',
-      message: `${data.overdueActions} remediation action(s) are overdue`,
+      message: `${data.overdueActions} action item(s) are overdue`,
       severity: 'high',
     })
   }

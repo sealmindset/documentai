@@ -77,10 +77,10 @@ Provide specific, actionable findings with clear strategic recommendations.`
       const prompt = `Analyze the following document for legal review findings:
 
 Case Context:
-- Case ID: ${input.vendorId}
-- Case/Client Name: ${input.vendorContext.name}
-- Current Priority Tier: ${input.vendorContext.riskTier}
-- Charges/Claims: ${input.vendorContext.dataAccess.join(', ')}
+- Case ID: ${input.clientId}
+- Case/Client Name: ${input.clientContext.name}
+- Current Priority Tier: ${input.clientContext.priorityTier}
+- Charges/Claims: ${input.clientContext.dataAccess.join(', ')}
 
 Document Information:
 - Document ID: ${input.documentId}
@@ -93,7 +93,7 @@ ${input.documentContent}
 
 Analyze this document and provide findings in the following JSON format:
 {
-  "vendorId": "string",
+  "clientId": "string",
   "documentId": "string",
   "findings": [
     {
@@ -107,20 +107,20 @@ Analyze this document and provide findings in the following JSON format:
       "recommendedAction": "Specific strategic recommendation"
     }
   ],
-  "overallRiskAssessment": "Summary assessment of case posture based on this document",
+  "overallReviewAssessment": "Summary assessment of case posture based on this document",
   "complianceGaps": ["List of legal issues and vulnerabilities identified"],
   "strengthAreas": ["List of strong defense arguments and favorable evidence noted"]
 }`
 
       const result = await this.invokeWithJSON<SecurityAnalysisOutput>(prompt)
-      result.vendorId = input.vendorId
+      result.clientId = input.clientId
       result.documentId = input.documentId
 
-      // Save findings to database
+      // Save issues to database
       for (const finding of result.findings) {
-        await prisma.riskFinding.create({
+        await prisma.issue.create({
           data: {
-            vendorId: input.vendorId,
+            clientId: input.clientId,
             documentId: input.documentId,
             findingType: input.documentType,
             findingCategory: finding.category,
@@ -143,7 +143,7 @@ Analyze this document and provide findings in the following JSON format:
         where: { id: input.documentId },
         data: {
           status: 'ANALYZED',
-          analysisResult: result.overallRiskAssessment,
+          analysisResult: result.overallReviewAssessment,
         },
       })
 
@@ -152,7 +152,7 @@ Analyze this document and provide findings in the following JSON format:
         entityType: 'Document',
         entityId: input.documentId,
         actionTaken: `Analyzed ${input.documentType} document`,
-        inputSummary: `Vendor: ${input.vendorContext.name}`,
+        inputSummary: `Client: ${input.clientContext.name}`,
         outputSummary: `Found ${result.findings.length} findings (${result.findings.filter((f) => f.severity === 'CRITICAL' || f.severity === 'HIGH').length} critical/high)`,
         status: 'SUCCESS',
         processingTimeMs: Date.now() - startTime,
@@ -192,28 +192,28 @@ Analyze this document and provide findings in the following JSON format:
   }
 
   async analyzeMultipleDocuments(
-    vendorId: string,
+    clientId: string,
     documents: { id: string; type: string; content: string }[]
-  ): Promise<AgentResult<{ vendorId: string; totalFindings: number; summary: string }>> {
+  ): Promise<AgentResult<{ clientId: string; totalFindings: number; summary: string }>> {
     const startTime = Date.now()
 
     try {
-      // Get vendor context
-      const vendor = await prisma.vendor.findUnique({
-        where: { id: vendorId },
+      // Get client context
+      const client = await prisma.client.findUnique({
+        where: { id: clientId },
         include: {
-          riskProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
+          clientProfiles: { orderBy: { createdAt: 'desc' }, take: 1 },
         },
       })
 
-      if (!vendor) {
-        throw new Error('Vendor not found')
+      if (!client) {
+        throw new Error('Client not found')
       }
 
       const context = {
-        name: vendor.name,
-        riskTier: vendor.riskProfiles[0]?.riskTier || 'MEDIUM',
-        dataAccess: JSON.parse(vendor.riskProfiles[0]?.dataTypesAccessed || '[]') as string[],
+        name: client.name,
+        priorityTier: client.clientProfiles[0]?.priorityTier || 'MEDIUM',
+        dataAccess: JSON.parse(client.clientProfiles[0]?.dataTypesAccessed || '[]') as string[],
       }
 
       let totalFindings = 0
@@ -221,11 +221,11 @@ Analyze this document and provide findings in the following JSON format:
       // Analyze each document
       for (const doc of documents) {
         const result = await this.execute({
-          vendorId,
+          clientId,
           documentId: doc.id,
           documentType: doc.type,
           documentContent: doc.content,
-          vendorContext: context,
+          clientContext: context,
         })
 
         if (result.success && result.data) {
@@ -233,17 +233,17 @@ Analyze this document and provide findings in the following JSON format:
         }
       }
 
-      const summary = `Analyzed ${documents.length} documents for ${vendor.name}. Found ${totalFindings} total findings.`
+      const summary = `Analyzed ${documents.length} documents for ${client.name}. Found ${totalFindings} total findings.`
 
       return this.createResult(
         true,
-        { vendorId, totalFindings, summary },
+        { clientId, totalFindings, summary },
         undefined,
         startTime
       )
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      return this.createResult<{ vendorId: string; totalFindings: number; summary: string }>(false, undefined, errorMessage, startTime)
+      return this.createResult<{ clientId: string; totalFindings: number; summary: string }>(false, undefined, errorMessage, startTime)
     }
   }
 }

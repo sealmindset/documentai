@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, Scale } from 'lucide-react'
 
-interface Vendor {
+interface Client {
   id: string
   name: string
   status: string
@@ -30,22 +30,22 @@ export default function PipelinePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const statusFilter = searchParams.get('status')
-  const [vendors, setVendors] = useState<Vendor[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/vendors')
-      .then((r) => r.ok ? r.json() : { vendors: [] })
-      .then((d) => setVendors(d.vendors || d))
+    fetch('/api/clients')
+      .then((r) => r.ok ? r.json() : { clients: [] })
+      .then((d) => setClients(d.clients || d))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
   const filtered = statusFilter
-    ? vendors.filter((v) => v.status === statusFilter)
-    : vendors
+    ? clients.filter((v) => v.status === statusFilter)
+    : clients
 
-  const columns: Column<Vendor>[] = [
+  const columns: Column<Client>[] = [
     { key: 'name', header: 'Case', sortable: true, filterable: true },
     {
       key: 'status', header: 'Status', sortable: true, filterable: true,
@@ -87,7 +87,7 @@ export default function PipelinePage() {
             data={filtered}
             loading={loading}
             searchPlaceholder="Search cases..."
-            onRowClick={(row) => router.push(`/parties/${row.id}`)}
+            onRowClick={(row) => router.push(`/clients/${row.id}`)}
           />
         </CardContent>
       </Card>

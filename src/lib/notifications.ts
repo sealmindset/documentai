@@ -16,14 +16,14 @@ const INTERNAL_ROLES = ['ADMIN', 'ANALYST', 'VIEWER']
  *   - Broadcast INTERNAL notifications (recipientId is null)
  *   - Targeted INTERNAL notifications (recipientId = their user ID)
  *
- * Vendor users: returns null (no user-vendor association yet).
+ * Client users: returns null (no user-client association yet).
  */
 export function buildNotificationWhere(
   userId: string,
   roleName: string
 ): Prisma.NotificationWhereInput | null {
   if (!INTERNAL_ROLES.includes(roleName)) {
-    return null // Vendor users — not wired yet
+    return null // Client users — not wired yet
   }
 
   return {

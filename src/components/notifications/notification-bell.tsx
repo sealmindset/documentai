@@ -23,16 +23,16 @@ const POLL_INTERVAL = 30_000 // 30 seconds
 function getEntityRoute(entityType: string | null, entityId: string | null): string | null {
   if (!entityType) return null
   switch (entityType) {
-    case 'Vendor':
-      return entityId ? `/parties/${entityId}` : '/parties'
-    case 'RiskFinding':
-      return '/findings'
-    case 'RemediationAction':
-      return '/findings'
+    case 'Client':
+      return entityId ? `/clients/${entityId}` : '/clients'
+    case 'Issue':
+      return '/issues'
+    case 'ActionItem':
+      return '/issues'
     case 'Document':
       return '/documents'
-    case 'RiskAssessment':
-      return '/assessments'
+    case 'CaseReview':
+      return '/case-reviews'
     default:
       return '/dashboard'
   }
@@ -40,11 +40,11 @@ function getEntityRoute(entityType: string | null, entityId: string | null): str
 
 function entityLabel(entityType: string | null): string {
   switch (entityType) {
-    case 'Vendor': return 'parties'
-    case 'RiskFinding': return 'issues'
-    case 'RemediationAction': return 'action items'
+    case 'Client': return 'clients'
+    case 'Issue': return 'issues'
+    case 'ActionItem': return 'action items'
     case 'Document': return 'documents'
-    case 'RiskAssessment': return 'reviews'
+    case 'CaseReview': return 'reviews'
     default: return 'dashboard'
   }
 }

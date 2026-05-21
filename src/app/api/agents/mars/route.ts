@@ -7,11 +7,11 @@ import prisma from '@/lib/db'
 import { z } from 'zod'
 
 const remediationRequestSchema = z.object({
-  findingId: z.string(),
+  issueId: z.string(),
 })
 
 const acceptanceRequestSchema = z.object({
-  findingId: z.string(),
+  issueId: z.string(),
   justification: z.string().min(50),
   approver: z.string(),
 })
@@ -31,30 +31,30 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = remediationRequestSchema.parse(body)
 
-    // Get finding and vendor info
-    const finding = await prisma.riskFinding.findUnique({
-      where: { id: validated.findingId },
+    // Get issue and client info
+    const issue = await prisma.issue.findUnique({
+      where: { id: validated.issueId },
       include: {
-        vendor: true,
+        client: true,
       },
     })
 
-    if (!finding) {
-      return NextResponse.json({ error: 'Finding not found' }, { status: 404 })
+    if (!issue) {
+      return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
     }
 
     // Execute ATLAS agent
     const result = await atlas.execute({
-      findingId: validated.findingId,
-      vendorId: finding.vendorId,
-      finding: {
-        title: finding.title,
-        severity: finding.severity,
-        description: finding.description || '',
+      issueId: validated.issueId,
+      clientId: issue.clientId,
+      issue: {
+        title: issue.title,
+        severity: issue.severity,
+        description: issue.description || '',
       },
-      vendorContact: {
-        name: finding.vendor.primaryContactName || 'Vendor Contact',
-        email: finding.vendor.primaryContactEmail || '',
+      clientContact: {
+        name: issue.client.primaryContactName || 'Client Contact',
+        email: issue.client.primaryContactEmail || '',
       },
     })
 
@@ -92,7 +92,7 @@ export async function PUT(request: NextRequest) {
     const validated = acceptanceRequestSchema.parse(body)
 
     const result = await atlas.processRiskAcceptance(
-      validated.findingId,
+      validated.issueId,
       validated.justification,
       validated.approver
     )

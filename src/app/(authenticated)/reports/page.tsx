@@ -35,7 +35,7 @@ import {
 
 interface Report {
   id: string
-  vendorId: string | null
+  clientId: string | null
   reportType: string
   reportName: string
   generatedBy: string | null
@@ -45,7 +45,7 @@ interface Report {
   approvedBy: string | null
   approvedDate: string | null
   createdAt: string
-  vendor: { id: string; name: string } | null
+  client: { id: string; name: string } | null
 }
 
 const statusVariant = (s: string) => {
@@ -104,7 +104,7 @@ export default function ReportsPage() {
         reportName: downloadTarget.reportName,
         reportType: downloadTarget.reportType,
         content: downloadTarget.content,
-        vendorName: downloadTarget.vendor?.name,
+        clientName: downloadTarget.client?.name,
         generatedBy: downloadTarget.generatedBy || undefined,
         generatedDate: downloadTarget.generatedDate,
         status: downloadTarget.status,
@@ -131,16 +131,16 @@ export default function ReportsPage() {
       ),
     },
     {
-      key: 'vendor.name',
-      header: 'Party',
+      key: 'client.name',
+      header: 'Client',
       sortable: true,
       filterable: true,
-      filterValue: (row) => row.vendor?.name || 'Portfolio-wide',
+      filterValue: (row) => row.client?.name || 'Portfolio-wide',
       render: (row) =>
-        row.vendor ? (
+        row.client ? (
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-400" />
-            <span>{row.vendor.name}</span>
+            <span>{row.client.name}</span>
           </div>
         ) : (
           <span className="text-gray-500">Portfolio-wide</span>
@@ -267,9 +267,9 @@ export default function ReportsPage() {
                   <span className="text-sm text-gray-500">
                     {typeLabel(selectedReport.reportType)}
                   </span>
-                  {selectedReport.vendor && (
+                  {selectedReport.client && (
                     <span className="text-sm text-gray-500">
-                      &middot; {selectedReport.vendor.name}
+                      &middot; {selectedReport.client.name}
                     </span>
                   )}
                 </div>

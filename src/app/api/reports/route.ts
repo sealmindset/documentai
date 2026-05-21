@@ -8,19 +8,19 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams
-    const vendorId = searchParams.get('vendorId')
+    const clientId = searchParams.get('clientId')
     const status = searchParams.get('status')
     const type = searchParams.get('type')
 
     const where: any = {}
-    if (vendorId) where.vendorId = vendorId
+    if (clientId) where.clientId = clientId
     if (status) where.status = status
     if (type) where.reportType = type
 
     const reports = await prisma.report.findMany({
       where,
       include: {
-        vendor: { select: { id: true, name: true } },
+        client: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: 'desc' },
     })

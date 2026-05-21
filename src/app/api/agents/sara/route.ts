@@ -7,7 +7,7 @@ import prisma from '@/lib/db'
 import { z } from 'zod'
 
 const analysisRequestSchema = z.object({
-  vendorId: z.string(),
+  clientId: z.string(),
   documentId: z.string(),
 })
 
@@ -26,13 +26,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = analysisRequestSchema.parse(body)
 
-    // Get document and vendor info
+    // Get document and client info
     const document = await prisma.document.findUnique({
       where: { id: validated.documentId },
       include: {
-        vendor: {
+        client: {
           include: {
-            riskProfiles: {
+            clientProfiles: {
               orderBy: { createdAt: 'desc' },
               take: 1,
             },
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     }
 
-    if (document.vendorId !== validated.vendorId) {
+    if (document.clientId !== validated.clientId) {
       return NextResponse.json(
         { error: 'Document does not belong to this party' },
         { status: 400 }
@@ -67,14 +67,14 @@ export async function POST(request: NextRequest) {
 
     // Execute ARIA agent
     const result = await aria.execute({
-      vendorId: validated.vendorId,
+      clientId: validated.clientId,
       documentId: validated.documentId,
       documentType: document.documentType,
       documentContent,
-      vendorContext: {
-        name: document.vendor.name,
-        riskTier: document.vendor.riskProfiles[0]?.riskTier || 'MEDIUM',
-        dataAccess: JSON.parse(document.vendor.riskProfiles[0]?.dataTypesAccessed || '[]') as string[],
+      clientContext: {
+        name: document.client.name,
+        priorityTier: document.client.clientProfiles[0]?.priorityTier || 'MEDIUM',
+        dataAccess: JSON.parse(document.client.clientProfiles[0]?.dataTypesAccessed || '[]') as string[],
       },
     })
 

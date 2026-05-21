@@ -40,7 +40,7 @@ interface DashboardData {
       documentType: string
       expirationDate: string | null
       status: string
-      vendor: { id: string; name: string }
+      client: { id: string; name: string }
     }[]
   }
   caseloadByAttorney: { attorney: string; count: number }[]
@@ -54,8 +54,8 @@ interface DashboardData {
     date: string
     type: string
     title: string
-    vendorName: string
-    vendorId: string
+    clientName: string
+    clientId: string
   }[]
   alerts: { type: string; message: string; severity: string }[]
   recentActivity: {
@@ -294,7 +294,7 @@ export default function DashboardPage() {
               {data.motions.items.slice(0, 3).map((m) => (
                 <div key={m.id} className="flex items-center justify-between text-sm">
                   <div className="truncate flex-1">
-                    <span className="text-gray-700">{m.vendor.name}</span>
+                    <span className="text-gray-700">{m.client.name}</span>
                   </div>
                   {m.expirationDate && (
                     <span className={`text-xs shrink-0 ml-2 ${daysUntil(m.expirationDate) <= 7 ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
@@ -423,7 +423,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900 truncate">{event.title}</div>
-                      <div className="text-xs text-gray-500">{event.vendorName}</div>
+                      <div className="text-xs text-gray-500">{event.clientName}</div>
                     </div>
                     <Badge variant={eventTypeBadge(event.type) as any} className="shrink-0 text-xs">
                       {eventTypeLabel(event.type)}

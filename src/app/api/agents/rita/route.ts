@@ -6,8 +6,8 @@ import { rita } from '@/lib/agents'
 import { z } from 'zod'
 
 const reportRequestSchema = z.object({
-  vendorId: z.string().optional(),
-  assessmentId: z.string().optional(),
+  clientId: z.string().optional(),
+  caseReviewId: z.string().optional(),
   reportType: z.enum([
     'EXECUTIVE_SUMMARY',
     'DETAILED_ASSESSMENT',
@@ -36,10 +36,10 @@ export async function POST(request: NextRequest) {
 
     // Execute RITA agent
     const result = await rita.execute({
-      vendorId: validated.vendorId,
-      assessmentId: validated.assessmentId,
+      clientId: validated.clientId,
+      caseReviewId: validated.caseReviewId,
       reportType: validated.reportType,
-      includeFindings: validated.includeFindings,
+      includeIssues: validated.includeFindings,
       includeTrends: validated.includeTrends,
     })
 

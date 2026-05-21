@@ -23,7 +23,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { FileUploadZone, type UploadedFile } from './file-upload-zone'
-import { VendorInfoForm, type VendorFormData } from './vendor-info-form'
+import { ClientInfoForm, type ClientFormData } from './client-info-form'
 import { DedupMatchDialog, type DedupMatchResult } from './dedup-match-dialog'
 import { PipelineProgress } from './pipeline-progress'
 
@@ -32,7 +32,7 @@ type Step =
   | 'extracting'
   | 'dedup'
   | 'dedup_review'
-  | 'vendor_form'
+  | 'client_form'
   | 'confirming'
   | 'complete'
 
@@ -41,7 +41,7 @@ interface ExtractionResult {
   fileSize: number
   mimeType: string
   extractedText: string
-  vendorInfo: Record<string, unknown>
+  clientInfo: Record<string, unknown>
   confidence: Record<string, number>
   documentAnalysis: Record<string, unknown>
 }
@@ -60,7 +60,7 @@ interface OnboardingWizardProps {
   onComplete?: () => void
 }
 
-function mergeVendorInfo(extractions: ExtractionResult[]): {
+function mergeClientInfo(extractions: ExtractionResult[]): {
   merged: Record<string, unknown>
   confidence: Record<string, number>
 } {
@@ -69,7 +69,7 @@ function mergeVendorInfo(extractions: ExtractionResult[]): {
   const confidence: Record<string, number> = {}
 
   for (const ext of extractions) {
-    const vi = ext.vendorInfo || {}
+    const vi = ext.clientInfo || {}
     const conf = ext.confidence || {}
 
     for (const [key, value] of Object.entries(vi)) {
@@ -86,7 +86,7 @@ function mergeVendorInfo(extractions: ExtractionResult[]): {
   return { merged, confidence }
 }
 
-function vendorInfoToFormData(info: Record<string, unknown>): VendorFormData {
+function clientInfoToFormData(info: Record<string, unknown>): ClientFormData {
   const addr = (info.address as Record<string, string | null>) || {}
   return {
     name: (info.name as string) || '',
@@ -114,7 +114,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
   const [step, setStep] = useState<Step>('upload')
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [extractions, setExtractions] = useState<ExtractionResult[]>([])
-  const [vendorForm, setVendorForm] = useState<VendorFormData>({
+  const [clientForm, setClientForm] = useState<ClientFormData>({
     name: '', legalName: '', dunsNumber: '', street: '', city: '', state: '',
     country: '', zip: '', phone: '', primaryContactName: '', primaryContactEmail: '',
     primaryContactPhone: '', industry: '', website: '',
@@ -124,10 +124,10 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
   const [selectedMatch, setSelectedMatch] = useState<DedupMatchResult | null>(null)
   const [showDedupDialog, setShowDedupDialog] = useState(false)
   const [action, setAction] = useState<'create_new' | 'use_existing' | 'reassess'>('create_new')
-  const [existingVendorId, setExistingVendorId] = useState<string | null>(null)
+  const [existingClientId, setExistingClientId] = useState<string | null>(null)
   const [workflowStages, setWorkflowStages] = useState<WorkflowStage[]>([])
   const [pipelineRunning, setPipelineRunning] = useState(false)
-  const [createdVendorId, setCreatedVendorId] = useState<string | null>(null)
+  const [createdClientId, setCreatedClientId] = useState<string | null>(null)
   const [incompleteFields, setIncompleteFields] = useState<string[]>([])
 
   const handleFilesAdded = useCallback((newFiles: File[]) => {
@@ -141,7 +141,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }, [])
 
-  // Step 1 → 2: Extract vendor info from all files
+  // Step 1 → 2: Extract client info from all files
   const handleStartExtraction = async () => {
     if (files.length === 0) return
     setStep('extracting')
@@ -184,9 +184,9 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
       return
     }
 
-    // Merge extracted vendor info
-    const { merged, confidence: conf } = mergeVendorInfo(results)
-    setVendorForm(vendorInfoToFormData(merged))
+    // Merge extracted client info
+    const { merged, confidence: conf } = mergeClientInfo(results)
+    setClientForm(clientInfoToFormData(merged))
     setConfidence(conf)
 
     // Check incomplete fields
@@ -198,29 +198,29 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
 
     // Proceed to dedup
     setStep('dedup')
-    await runDedup(merged, results)
+    await runClientDedup(merged, results)
   }
 
   // Step 2 → 3: Run dedup check
-  const runDedup = async (mergedInfo: Record<string, unknown>, results: ExtractionResult[]) => {
+  const runClientDedup = async (mergedInfo: Record<string, unknown>, results: ExtractionResult[]) => {
     try {
       const res = await fetch('/api/onboarding/dedup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          vendorInfo: mergedInfo,
+          clientInfo: mergedInfo,
           documents: results.map((r) => ({
             fileName: r.fileName,
             textSnippet: r.extractedText?.slice(0, 2000) || '',
-            documentDate: (r.vendorInfo?.documentDate as string) || null,
-            documentType: (r.vendorInfo?.documentType as string) || null,
+            documentDate: (r.clientInfo?.documentDate as string) || null,
+            documentType: (r.clientInfo?.documentType as string) || null,
           })),
         }),
       })
 
       if (!res.ok) {
         console.error('Dedup check failed')
-        setStep('vendor_form')
+        setStep('client_form')
         return
       }
 
@@ -233,12 +233,12 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
         setShowDedupDialog(true)
         setStep('dedup_review')
       } else {
-        // No matches — go to vendor form
-        setStep('vendor_form')
+        // No matches — go to client form
+        setStep('client_form')
       }
     } catch {
-      // Dedup failed, proceed to vendor form
-      setStep('vendor_form')
+      // Dedup failed, proceed to client form
+      setStep('client_form')
     }
   }
 
@@ -249,27 +249,27 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
       (dc) => dc.similarity === 'updated'
     )
     setAction(hasUpdated ? 'reassess' : 'use_existing')
-    setExistingVendorId(selectedMatch.vendor.id)
+    setExistingClientId(selectedMatch.client.id)
     setShowDedupDialog(false)
     setStep('confirming')
-    handleConfirm(hasUpdated ? 'reassess' : 'use_existing', selectedMatch.vendor.id)
+    handleConfirm(hasUpdated ? 'reassess' : 'use_existing', selectedMatch.client.id)
   }
 
   const handleCreateNew = () => {
     setAction('create_new')
-    setExistingVendorId(null)
+    setExistingClientId(null)
     setShowDedupDialog(false)
-    setStep('vendor_form')
+    setStep('client_form')
   }
 
   const handleDedupClose = () => {
     setShowDedupDialog(false)
-    setStep('vendor_form')
+    setStep('client_form')
   }
 
   // Step 4 → 5: Confirm and run pipeline
-  const handleVendorFormConfirm = () => {
-    if (!vendorForm.name.trim()) {
+  const handleClientFormConfirm = () => {
+    if (!clientForm.name.trim()) {
       toast({ title: 'Name required', description: 'Please enter a company name.', variant: 'destructive' })
       return
     }
@@ -279,7 +279,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
 
   const handleConfirm = async (
     confirmAction: 'create_new' | 'use_existing' | 'reassess',
-    vendorId: string | null
+    clientId: string | null
   ) => {
     setPipelineRunning(true)
     setWorkflowStages([])
@@ -291,7 +291,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
           fileName: ext.fileName,
           fileSize: ext.fileSize,
           mimeType: ext.mimeType,
-          documentType: (ext.vendorInfo?.documentType as string) || (ext.documentAnalysis?.documentType as string) || 'OTHER',
+          documentType: (ext.clientInfo?.documentType as string) || (ext.documentAnalysis?.documentType as string) || 'OTHER',
           extractedText: ext.extractedText,
           analysisResult: ext.documentAnalysis,
         })),
@@ -304,20 +304,20 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
       }
 
       if (confirmAction === 'create_new') {
-        body.vendorData = {
-          name: vendorForm.name,
-          legalName: vendorForm.legalName || undefined,
-          dunsNumber: vendorForm.dunsNumber || undefined,
-          website: vendorForm.website || undefined,
-          industry: vendorForm.industry || undefined,
-          country: vendorForm.country || undefined,
-          stateProvince: vendorForm.state || undefined,
-          primaryContactName: vendorForm.primaryContactName || undefined,
-          primaryContactEmail: vendorForm.primaryContactEmail || undefined,
-          primaryContactPhone: vendorForm.primaryContactPhone || undefined,
+        body.clientData = {
+          name: clientForm.name,
+          legalName: clientForm.legalName || undefined,
+          dunsNumber: clientForm.dunsNumber || undefined,
+          website: clientForm.website || undefined,
+          industry: clientForm.industry || undefined,
+          country: clientForm.country || undefined,
+          stateProvince: clientForm.state || undefined,
+          primaryContactName: clientForm.primaryContactName || undefined,
+          primaryContactEmail: clientForm.primaryContactEmail || undefined,
+          primaryContactPhone: clientForm.primaryContactPhone || undefined,
         }
       } else {
-        body.existingVendorId = vendorId
+        body.existingClientId = clientId
       }
 
       const res = await fetch('/api/onboarding/confirm', {
@@ -332,13 +332,13 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
       }
 
       const data = await res.json()
-      setCreatedVendorId(data.vendor?.id || vendorId)
+      setCreatedClientId(data.client?.id || clientId)
       setWorkflowStages(data.workflow?.stages || [])
       setPipelineRunning(false)
       setStep('complete')
 
       toast({
-        title: confirmAction === 'create_new' ? 'Party created' : 'Review complete',
+        title: confirmAction === 'create_new' ? 'Client created' : 'Review complete',
         description: `${data.documents?.length || 0} document(s) processed.`,
       })
     } catch (err) {
@@ -361,7 +361,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
     setDedupMatches([])
     setSelectedMatch(null)
     setWorkflowStages([])
-    setCreatedVendorId(null)
+    setCreatedClientId(null)
     onClose()
     onComplete?.()
   }
@@ -371,7 +371,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
     extracting: 'Analyzing Documents...',
     dedup: 'Checking for Duplicates...',
     dedup_review: 'Review Match',
-    vendor_form: 'Review Party Information',
+    client_form: 'Review Client Information',
     confirming: 'Processing...',
     complete: 'Onboarding Complete',
   }
@@ -388,10 +388,10 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
             {step === 'upload' && (
               <DialogDescription>
                 Upload documents (contracts, compliance reports, questionnaires, etc.) and we&apos;ll
-                extract party info, check for duplicates, and start the document review.
+                extract client info, check for duplicates, and start the document review.
               </DialogDescription>
             )}
-            {step === 'vendor_form' && incompleteFields.length > 0 && (
+            {step === 'client_form' && incompleteFields.length > 0 && (
               <DialogDescription className="flex items-center gap-1.5 text-yellow-600">
                 <AlertCircle className="h-4 w-4" />
                 Some fields could not be extracted: {incompleteFields.join(', ')}.
@@ -424,9 +424,9 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
               <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
                 <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
                 <div>
-                  <p className="text-sm font-medium text-blue-700">Extracting party information...</p>
+                  <p className="text-sm font-medium text-blue-700">Extracting client information...</p>
                   <p className="text-xs text-blue-600 mt-0.5">
-                    AI is reading your documents and identifying party details.
+                    AI is reading your documents and identifying client details.
                   </p>
                 </div>
               </div>
@@ -444,29 +444,29 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
             <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
               <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
               <div>
-                <p className="text-sm font-medium text-blue-700">Checking for existing parties...</p>
+                <p className="text-sm font-medium text-blue-700">Checking for existing clients...</p>
                 <p className="text-xs text-blue-600 mt-0.5">
-                  Comparing against your party database for potential matches.
+                  Comparing against your client database for potential matches.
                 </p>
               </div>
             </div>
           )}
 
           {/* VENDOR FORM STEP */}
-          {step === 'vendor_form' && (
+          {step === 'client_form' && (
             <>
-              <VendorInfoForm
-                data={vendorForm}
+              <ClientInfoForm
+                data={clientForm}
                 confidence={confidence}
                 onChange={(field, value) =>
-                  setVendorForm((prev) => ({ ...prev, [field]: value }))
+                  setClientForm((prev) => ({ ...prev, [field]: value }))
                 }
               />
               <DialogFooter>
                 <Button variant="outline" onClick={handleClose}>Cancel</Button>
-                <Button onClick={handleVendorFormConfirm}>
+                <Button onClick={handleClientFormConfirm}>
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Create Party & Start Review
+                  Create Client & Start Review
                 </Button>
               </DialogFooter>
             </>
@@ -499,7 +499,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
                   <CheckCircle className="h-5 w-5 text-green-500" />
                   <div>
                     <p className="text-sm font-medium text-green-700">
-                      Party onboarding complete!
+                      Client onboarding complete!
                     </p>
                     <p className="text-xs text-green-600 mt-0.5">
                       {extractions.length} document(s) processed. Document review pipeline finished.
@@ -517,13 +517,13 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={handleClose}>Close</Button>
-                {createdVendorId && (
+                {createdClientId && (
                   <Button onClick={() => {
                     handleClose()
-                    router.push(`/parties/${createdVendorId}`)
+                    router.push(`/clients/${createdClientId}`)
                   }}>
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    View Party
+                    View Client
                   </Button>
                 )}
               </DialogFooter>
@@ -538,7 +538,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
           open={showDedupDialog}
           onClose={handleDedupClose}
           match={selectedMatch}
-          extractedInfo={extractions.length > 0 ? mergeVendorInfo(extractions).merged : {}}
+          extractedInfo={extractions.length > 0 ? mergeClientInfo(extractions).merged : {}}
           onUseExisting={handleUseExisting}
           onCreateNew={handleCreateNew}
         />

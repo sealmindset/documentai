@@ -5,7 +5,7 @@ import { sanitizeStrings } from '@/lib/sanitize-input'
 import { z } from 'zod'
 
 const documentSchema = z.object({
-  vendorId: z.string().max(100),
+  clientId: z.string().max(100),
   documentType: z.enum([
     'SOC2_TYPE1',
     'SOC2_TYPE2',
@@ -31,14 +31,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams
-    const vendorId = searchParams.get('vendorId')
+    const clientId = searchParams.get('clientId')
     const status = searchParams.get('status')
     const type = searchParams.get('type')
 
     const where: any = {}
 
-    if (vendorId) {
-      where.vendorId = vendorId
+    if (clientId) {
+      where.clientId = clientId
     }
 
     if (status) {
@@ -52,11 +52,11 @@ export async function GET(request: NextRequest) {
     const documents = await prisma.document.findMany({
       where,
       include: {
-        vendor: {
+        client: {
           select: { id: true, name: true },
         },
         _count: {
-          select: { riskFindings: true },
+          select: { issues: true },
         },
       },
       orderBy: { uploadDate: 'desc' },
@@ -85,20 +85,20 @@ export async function POST(request: NextRequest) {
     }
     const validated = sanitizeStrings(documentSchema.parse(body))
 
-    // Check if vendor exists
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: validated.vendorId },
+    // Check if client exists
+    const client = await prisma.client.findUnique({
+      where: { id: validated.clientId },
     })
 
-    if (!vendor) {
-      return NextResponse.json({ error: 'Vendor not found' }, { status: 404 })
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
     // Mark previous versions as not current
     if (validated.documentType) {
       await prisma.document.updateMany({
         where: {
-          vendorId: validated.vendorId,
+          clientId: validated.clientId,
           documentType: validated.documentType,
           isCurrent: true,
         },
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     const document = await prisma.document.create({
       data: {
-        vendorId: validated.vendorId,
+        clientId: validated.clientId,
         documentType: validated.documentType,
         documentName: validated.documentName,
         documentDate: validated.documentDate

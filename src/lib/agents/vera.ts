@@ -12,13 +12,13 @@
  */
 
 import { BaseAgent } from './base-agent'
-import { RISK_SCORE_RULES, type ValidationRule } from '@/lib/ai/validate'
+import { REVIEW_SCORE_RULES, type ValidationRule } from '@/lib/ai/validate'
 import prisma from '@/lib/db'
 import type {
   AgentConfig,
   AgentResult,
-  VendorProfileInput,
-  VendorProfileOutput,
+  ClientProfileInput,
+  ClientProfileOutput,
 } from './types'
 
 const LEXA_CONFIG: AgentConfig = {
@@ -35,7 +35,7 @@ export class LEXAAgent extends BaseAgent {
   }
 
   protected getOutputValidationRules(): ValidationRule[] {
-    return RISK_SCORE_RULES
+    return REVIEW_SCORE_RULES
   }
 
   protected getDefaultSystemPrompt(): string {
@@ -70,15 +70,15 @@ Data Sensitivity Considerations:
 Always provide specific, actionable recommendations for case strategy and document management.`
   }
 
-  async execute(input: VendorProfileInput): Promise<AgentResult<VendorProfileOutput>> {
+  async execute(input: ClientProfileInput): Promise<AgentResult<ClientProfileOutput>> {
     const startTime = Date.now()
 
     try {
       const prompt = `Analyze the following case and create a case profile:
 
 Case Information:
-- Vendor ID: ${input.vendorId}
-- Name: ${input.vendorName}
+- Client ID: ${input.clientId}
+- Name: ${input.clientName}
 - Case Type: ${input.industry || 'Not specified'}
 - Estimated Exposure: $${input.annualSpend?.toLocaleString() || 'Not specified'}
 
@@ -93,11 +93,11 @@ Case Context:
 - Case Importance/Urgency: ${input.businessCriticality}
 ${input.additionalContext ? `- Additional Context: ${input.additionalContext}` : ''}
 
-Provide a risk assessment in the following JSON format:
+Provide a review assessment in the following JSON format:
 {
-  "vendorId": "string",
-  "riskTier": "CRITICAL|HIGH|MEDIUM|LOW",
-  "overallRiskScore": number (0-100),
+  "clientId": "string",
+  "priorityTier": "CRITICAL|HIGH|MEDIUM|LOW",
+  "overallReviewScore": number (0-100),
   "dataSensitivityLevel": "string",
   "assessmentFrequency": "Quarterly|Semi-Annual|Annual|Biennial",
   "nextAssessmentDate": "YYYY-MM-DD",
@@ -105,7 +105,7 @@ Provide a risk assessment in the following JSON format:
   "recommendations": ["array of specific recommendations"]
 }`
 
-      const result = await this.invokeWithJSON<VendorProfileOutput>(prompt)
+      const result = await this.invokeWithJSON<ClientProfileOutput>(prompt)
 
       // Calculate next assessment date based on frequency
       const today = new Date()
@@ -124,14 +124,14 @@ Provide a risk assessment in the following JSON format:
           nextDate.setFullYear(today.getFullYear() + 2)
       }
       result.nextAssessmentDate = nextDate
-      result.vendorId = input.vendorId
+      result.clientId = input.clientId
 
-      // Save risk profile to database
-      await prisma.riskProfile.create({
+      // Save client profile to database
+      await prisma.clientProfile.create({
         data: {
-          vendorId: input.vendorId,
-          riskTier: result.riskTier,
-          overallRiskScore: result.overallRiskScore,
+          clientId: input.clientId,
+          priorityTier: result.priorityTier,
+          overallReviewScore: result.overallReviewScore,
           dataSensitivityLevel: result.dataSensitivityLevel,
           dataTypesAccessed: JSON.stringify(input.dataTypesAccessed),
           systemIntegrations: JSON.stringify(input.systemIntegrations),
@@ -147,12 +147,12 @@ Provide a risk assessment in the following JSON format:
 
       // Log activity
       await this.logActivity({
-        activityType: 'RISK_PROFILING',
-        entityType: 'Vendor',
-        entityId: input.vendorId,
-        actionTaken: `Created risk profile with tier: ${result.riskTier}`,
-        inputSummary: `Vendor: ${input.vendorName}`,
-        outputSummary: `Risk Score: ${result.overallRiskScore}, Tier: ${result.riskTier}`,
+        activityType: 'CLIENT_PROFILING',
+        entityType: 'Client',
+        entityId: input.clientId,
+        actionTaken: `Created client profile with tier: ${result.priorityTier}`,
+        inputSummary: `Client: ${input.clientName}`,
+        outputSummary: `Review Score: ${result.overallReviewScore}, Tier: ${result.priorityTier}`,
         status: 'SUCCESS',
         processingTimeMs: Date.now() - startTime,
       })
@@ -162,17 +162,17 @@ Provide a risk assessment in the following JSON format:
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
       await this.logActivity({
-        activityType: 'RISK_PROFILING',
-        entityType: 'Vendor',
-        entityId: input.vendorId,
-        actionTaken: 'Failed to create risk profile',
-        inputSummary: `Vendor: ${input.vendorName}`,
+        activityType: 'CLIENT_PROFILING',
+        entityType: 'Client',
+        entityId: input.clientId,
+        actionTaken: 'Failed to create client profile',
+        inputSummary: `Client: ${input.clientName}`,
         status: 'FAILED',
         errorMessage,
         processingTimeMs: Date.now() - startTime,
       })
 
-      return this.createResult<VendorProfileOutput>(false, undefined, errorMessage, startTime)
+      return this.createResult<ClientProfileOutput>(false, undefined, errorMessage, startTime)
     }
   }
 }

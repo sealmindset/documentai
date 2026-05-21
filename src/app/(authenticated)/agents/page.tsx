@@ -127,7 +127,7 @@ const agents = [
     capabilities: [
       'Case info extraction from documents',
       'Document type classification',
-      'Party identification',
+      'Client identification',
       'Document deduplication',
     ],
   },
@@ -258,7 +258,7 @@ export default function AgentsPage() {
             <div>
               <h4 className="font-medium mb-2">Case Onboarding Workflow</h4>
               <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
-                <li>Create a new case/matter in the Parties section</li>
+                <li>Create a new case/matter in the Clients section</li>
                 <li>Run LEXA to create the initial case profile</li>
                 <li>For Critical/High cases, run CLARA for detailed case analysis</li>
                 <li>DORA will request required case documents</li>

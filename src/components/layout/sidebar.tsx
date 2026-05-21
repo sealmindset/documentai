@@ -19,6 +19,8 @@ import {
   MessageSquare,
   Activity,
   BookUser,
+  FileStack,
+  FilePen,
 } from 'lucide-react'
 
 interface NavItem {
@@ -30,11 +32,13 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Parties', href: '/parties', icon: Building2, permission: 'vendors.view' },
+  { name: 'Clients', href: '/clients', icon: Building2, permission: 'clients.view' },
   { name: 'Contacts', href: '/contacts', icon: BookUser, permission: 'contacts.view' },
-  { name: 'Document Reviews', href: '/assessments', icon: ClipboardCheck, permission: 'assessments.view' },
+  { name: 'Document Reviews', href: '/case-reviews', icon: ClipboardCheck, permission: 'case-reviews.view' },
   { name: 'Documents', href: '/documents', icon: FileText, permission: 'documents.view' },
-  { name: 'Issues', href: '/findings', icon: AlertTriangle, permission: 'findings.view' },
+  { name: 'Issues', href: '/issues', icon: AlertTriangle, permission: 'issues.view' },
+  { name: 'Templates', href: '/templates', icon: FileStack, permission: 'templates.view' },
+  { name: 'Generate', href: '/generate', icon: FilePen, permission: 'generated-documents.create' },
   { name: 'Reports', href: '/reports', icon: BarChart3, permission: 'reports.view' },
   { name: 'AI Agents', href: '/agents', icon: Bot, permission: 'agents.view' },
 ]

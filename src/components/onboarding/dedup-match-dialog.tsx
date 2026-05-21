@@ -28,7 +28,7 @@ interface DocumentComparison {
   explanation: string
 }
 
-interface MatchedVendor {
+interface MatchedClient {
   id: string
   name: string
   legalName: string | null
@@ -41,7 +41,7 @@ interface MatchedVendor {
 }
 
 export interface DedupMatchResult {
-  vendor: MatchedVendor
+  client: MatchedClient
   matchType: 'strong' | 'fuzzy'
   matchPoints: MatchPoint[]
   overallConfidence: number
@@ -107,10 +107,10 @@ export function DedupMatchDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-yellow-500" />
-            Potential Party Match Found
+            Potential Client Match Found
           </DialogTitle>
           <DialogDescription>
-            We found an existing party that may match your uploaded documents.
+            We found an existing client that may match your uploaded documents.
             Review the comparison below.
           </DialogDescription>
         </DialogHeader>
@@ -158,16 +158,16 @@ export function DedupMatchDialog({
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-500">Existing Party</CardTitle>
+              <CardTitle className="text-sm text-gray-500">Existing Client</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <p className="font-medium">{match.vendor.name}</p>
-              {match.vendor.legalName && <p className="text-gray-500">{match.vendor.legalName}</p>}
-              {match.vendor.dunsNumber && <p>DUNS: {match.vendor.dunsNumber}</p>}
-              {match.vendor.industry && <p>{match.vendor.industry}</p>}
-              {match.vendor.primaryContactName && <p>{match.vendor.primaryContactName}</p>}
-              {match.vendor.primaryContactEmail && <p className="text-gray-500">{match.vendor.primaryContactEmail}</p>}
-              <Badge variant="outline" className="mt-1">{match.vendor.status}</Badge>
+              <p className="font-medium">{match.client.name}</p>
+              {match.client.legalName && <p className="text-gray-500">{match.client.legalName}</p>}
+              {match.client.dunsNumber && <p>DUNS: {match.client.dunsNumber}</p>}
+              {match.client.industry && <p>{match.client.industry}</p>}
+              {match.client.primaryContactName && <p>{match.client.primaryContactName}</p>}
+              {match.client.primaryContactEmail && <p className="text-gray-500">{match.client.primaryContactEmail}</p>}
+              <Badge variant="outline" className="mt-1">{match.client.status}</Badge>
             </CardContent>
           </Card>
         </div>
@@ -193,7 +193,7 @@ export function DedupMatchDialog({
             )}
             {hasUpdated && (
               <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700">
-                Updated documents detected. Using the existing party will trigger a reassessment with the newer documents.
+                Updated documents detected. Using the existing client will trigger a reassessment with the newer documents.
               </div>
             )}
           </div>
@@ -207,7 +207,7 @@ export function DedupMatchDialog({
             Ignore Match — Create New
           </Button>
           <Button onClick={onUseExisting} disabled={allIdentical}>
-            {hasUpdated ? 'Use Existing — Reassess' : 'Use Existing Party'}
+            {hasUpdated ? 'Use Existing — Reassess' : 'Use Existing Client'}
           </Button>
           {allIdentical && (
             <p className="text-xs text-gray-500 w-full text-right mt-1">
