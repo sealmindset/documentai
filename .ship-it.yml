@@ -1,0 +1,99 @@
+# ============================================================
+# AI TPRM Machine -- Deployment Configuration
+# ============================================================
+# Used by /ship-it to automate deployment steps.
+
+project:
+  name: tprmai
+  description: AI-powered Third Party Risk Management platform
+
+# Build configuration
+build:
+  runtime: node
+  version: "20"
+  command: npm run build
+  output: .next/standalone
+  docker:
+    file: Dockerfile
+    context: .
+    image: tprmai
+
+# Pre-deploy checks
+checks:
+  - name: build
+    command: npm run build
+  - name: lint
+    command: npm run lint
+  - name: prisma-validate
+    command: npx prisma validate
+
+# Environment requirements
+environments:
+  local:
+    description: Local development with Docker Compose
+    command: docker compose --profile dev up -d
+    url: http://localhost:3020
+    requires:
+      - docker
+      - docker-compose
+
+  staging:
+    description: Staging deployment to Azure
+    infrastructure: infra/
+    terraform_vars: infra/staging.tfvars
+    url: https://app-tprmai-staging.azurewebsites.net
+    requires:
+      - azure-cli
+      - terraform
+
+  production:
+    description: Production deployment to Azure
+    infrastructure: infra/
+    terraform_vars: infra/prod.tfvars
+    url: https://app-tprmai-prod.azurewebsites.net
+    requires:
+      - azure-cli
+      - terraform
+    approvals:
+      - security-review
+      - change-management
+
+# Deployment steps
+deploy:
+  steps:
+    - name: Build container
+      command: docker build -t ${REGISTRY}/${IMAGE}:${TAG} .
+
+    - name: Push to registry
+      command: docker push ${REGISTRY}/${IMAGE}:${TAG}
+
+    - name: Apply infrastructure
+      command: cd infra && terraform apply -var-file=${ENV}.tfvars -auto-approve
+
+    - name: Run database migrations
+      command: npx prisma db push
+
+    - name: Seed database
+      command: npx prisma db seed
+      condition: first_deploy_only
+
+    - name: Verify health
+      command: curl -sf ${APP_URL}/api/auth/me || exit 1
+      retries: 5
+      delay: 10
+
+# Rollback
+rollback:
+  steps:
+    - name: Revert container
+      command: docker tag ${REGISTRY}/${IMAGE}:${PREVIOUS_TAG} ${REGISTRY}/${IMAGE}:${TAG}
+    - name: Push reverted image
+      command: docker push ${REGISTRY}/${IMAGE}:${TAG}
+
+# Secrets (reference only -- actual values in Key Vault)
+secrets:
+  - DATABASE_URL
+  - OIDC_CLIENT_SECRET
+  - JWT_SECRET
+  - AI_PROVIDER
+  - AZURE_OPENAI_ENDPOINT

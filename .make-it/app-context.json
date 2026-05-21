@@ -1,0 +1,59 @@
+{
+  "project_name": "AI TPRM Machine",
+  "project_type": "web-app",
+  "active_tiers": [0, 1],
+  "purpose": "AI-powered Third Party Risk Management platform for automating vendor risk assessments, compliance monitoring, and audit workflows",
+  "users": {
+    "primary": "Security and compliance analysts at Sleep Number",
+    "roles": ["ADMIN", "ANALYST", "VIEWER", "VENDOR"]
+  },
+  "stack": {
+    "frontend": "Next.js 14",
+    "backend": "Next.js API Routes",
+    "database": "SQLite (via Prisma)",
+    "orm": "Prisma",
+    "ui": "Radix UI + Tailwind CSS",
+    "ai": {
+      "providers": ["Azure OpenAI", "Anthropic", "OpenAI"],
+      "sdk": ["@anthropic-ai/sdk", "langchain"]
+    }
+  },
+  "features": {
+    "ai_agents": {
+      "VERA": "Vendor Evaluation & Risk Assessment - calculates risk profiles",
+      "CARA": "Comprehensive Assessment & Review Agent - performs assessments",
+      "DORA": "Document Orchestration & Retrieval Agent - retrieves and manages documents",
+      "SARA": "Security Analysis & Risk Assessment - identifies risk findings",
+      "RITA": "Report Intelligence & Template Agent - generates reports",
+      "MARS": "Mitigation Action & Remediation System - manages remediation actions"
+    },
+    "pages": [
+      "Dashboard",
+      "Vendors",
+      "Risk Assessments",
+      "Documents",
+      "Risk Findings",
+      "Reports",
+      "Remediation Actions",
+      "Settings"
+    ],
+    "integrations": ["AuditBoard API", "Security Scorecard (optional)", "BitSight (optional)", "D&B (optional)"]
+  },
+  "auth": {
+    "needed": true,
+    "provider": "NextAuth (credentials)",
+    "roles_from": "database"
+  },
+  "deployment": {
+    "target": "TBD",
+    "containerize": false
+  },
+  "ai_usage_level": "heavy",
+  "security_scanner": {
+    "type": "none",
+    "configured": false
+  },
+  "created_at": "2025-01-05",
+  "imported_at": "2026-03-16",
+  "imported_from": "OneDrive - AI TPRM MACHINE"
+}

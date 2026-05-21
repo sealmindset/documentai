@@ -1,0 +1,20 @@
+# Copy to prod.tfvars and fill in actual values
+# NEVER commit prod.tfvars to git
+
+project     = "tprmai"
+environment = "prod"
+location    = "East US 2"
+
+# Database
+db_admin_password = ""  # Generate: openssl rand -base64 32
+
+# OIDC (Azure AD / Entra ID)
+oidc_issuer_url    = "https://login.microsoftonline.com/{tenant_id}/v2.0"
+oidc_client_id     = ""
+oidc_client_secret = ""
+
+# JWT
+jwt_secret = ""  # Generate: openssl rand -hex 32
+
+# Container image (optional -- defaults to latest in ACR)
+# container_image = "crtprmaiprod.azurecr.io/tprmai:v2.2.0"

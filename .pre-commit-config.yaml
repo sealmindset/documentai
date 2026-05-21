@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$'
+      - id: end-of-file-fixer
+        exclude: '\.md$'
+      - id: check-merge-conflict
+      - id: check-json
+        exclude: 'tsconfig\.json'
+      - id: check-yaml
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.3
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: lint
+        name: ESLint
+        entry: npx eslint --max-warnings 0
+        language: system
+        types_or: [javascript, jsx, typescript, tsx]
+        pass_filenames: false
+      - id: format-check
+        name: Prettier
+        entry: npx prettier --check
+        language: system
+        types_or: [javascript, jsx, typescript, tsx, json, css]

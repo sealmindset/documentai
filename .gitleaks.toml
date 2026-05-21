@@ -1,0 +1,18 @@
+title = "TPRMAI Gitleaks Configuration"
+
+[allowlist]
+description = "Known-safe patterns"
+paths = [
+  '''.env\.example''',
+  '''mock-services/''',
+  '''prisma/seed\.ts''',
+  '''docs/''',
+]
+regexTarget = "match"
+regexes = [
+  '''mock-oidc-secret''',
+  '''PLACEHOLDER''',
+  '''your-.*-here''',
+  '''changeme''',
+  '''jwt-secret-for-local-dev''',
+]

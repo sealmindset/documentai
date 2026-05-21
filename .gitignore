@@ -1,0 +1,127 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+.try-it/
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
+.env
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma (migrations should be committed -- do NOT ignore)
+
+# Uploads
+/uploads/*
+!/uploads/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+claude-*-cwd
+
+# Log files
+*.log
+output*.txt
+*_output.txt
+*_results.txt
+setup_log.txt
+template_info.txt
+slide1_structure.xml
+
+# Node binaries (Windows)
+node-v*/
+node.zip
+node_version.txt
+node-test-output.txt
+
+# Vendor document folders (symlinks to sensitive data)
+Articulate Global LLC
+
+# Large presentation files
+*.pptx
+
+# Temp files
+db_check.txt
+db_reset.txt
+dir_listing.txt
+regen.txt
+seed*.txt
+test_*.txt
+npm_*.txt
+prisma_*.txt
+
+# SQLite database
+*.db
+*.db-journal
+dev.db
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/.terraform.lock.hcl
+infra/prod.tfvars
+infra/staging.tfvars
+
+# Legacy (removed in cleanup -- prevent re-addition)
+/skills/
+/diagrams/
+DATABASE_SETUP.md
+TPRM-Process-Requirements.md
+
+# Legacy scripts (from original OneDrive import)
+TPRM_Demo_OnePager.md
+build_slide.js
+create_*.js
+create_demo_pptx.py
+extract_*.js
+extract_docs.py
+generate_svgs.bat
+generate_svgs.js
+inspect_*.js
+install-deps*.js
+read_*.js
+read_pentest.py
+run-npm.bat
+run_migration.js
+run_setup.js
+setup_database.js
+start-app.bat
+start-server.js
+start-tprm.bat
+start.sh
+test-node.js
+test_db.js
+/assessments/

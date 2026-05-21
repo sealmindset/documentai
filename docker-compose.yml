@@ -1,0 +1,88 @@
+version: "3.8"
+
+services:
+  # ---------- Application ----------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docai-app
+    ports:
+      - "127.0.0.1:3020:3000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-docai_user}:${POSTGRES_PASSWORD:-docai_pass}@db:5432/${POSTGRES_DB:-docai_db}
+      - NEXTAUTH_URL=http://localhost:3020
+      - NODE_ENV=production
+      # OIDC -- issuer must use Docker-internal address (not localhost)
+      - OIDC_ISSUER_URL=${OIDC_INTERNAL_ISSUER_URL:-http://mock-oidc:10090}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-mock-oidc-client}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-mock-oidc-secret}
+      - JWT_SECRET=${JWT_SECRET:-docker-dev-jwt-secret-not-for-production}
+      # AI Provider
+      - AI_PROVIDER=${AI_PROVIDER:-anthropic_foundry}
+      - AZURE_AI_FOUNDRY_ENDPOINT=${AZURE_AI_FOUNDRY_ENDPOINT:-}
+      - AZURE_AI_FOUNDRY_API_KEY=${AZURE_AI_FOUNDRY_API_KEY:-}
+      - AI_MODEL_COMPLEX=${AI_MODEL_COMPLEX:-}
+      - AI_MODEL_STANDARD=${AI_MODEL_STANDARD:-}
+      - AI_MODEL_SIMPLE=${AI_MODEL_SIMPLE:-}
+      - AZURE_AI_FOUNDRY_FALLBACK_MODEL=${AZURE_AI_FOUNDRY_FALLBACK_MODEL:-}
+      - DOCUMENTS_PATH=/app/data/documents
+      - UPLOAD_CACHE_PATH=/app/data/uploads
+    volumes:
+      - docai-documents:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+      mock-oidc:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http=require('http');http.get('http://127.0.0.1:3000',r=>{process.exit(r.statusCode<500?0:1)}).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------- PostgreSQL ----------
+  db:
+    image: postgres:16-alpine
+    container_name: docai-db
+    ports:
+      - "127.0.0.1:5438:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-docai_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-docai_pass}
+      - POSTGRES_DB=${POSTGRES_DB:-docai_db}
+    volumes:
+      - docai-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docai_user -d docai_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------- Mock OIDC (dev profile) ----------
+  mock-oidc:
+    build:
+      context: ./mock-services/mock-oidc
+      dockerfile: Dockerfile
+    container_name: docai-mock-oidc
+    profiles:
+      - dev
+    ports:
+      - "127.0.0.1:10091:10090"
+    environment:
+      - MOCK_OIDC_PORT=10090
+      - MOCK_OIDC_EXTERNAL_BASE_URL=${MOCK_OIDC_EXTERNAL_BASE_URL:-http://localhost:10091}
+      - MOCK_OIDC_INTERNAL_BASE_URL=http://mock-oidc:10090
+      - MOCK_OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-mock-oidc-client}
+      - MOCK_OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-mock-oidc-secret}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:10090/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  docai-pgdata:
+  docai-documents:

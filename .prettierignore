@@ -1,0 +1,8 @@
+.next/
+node_modules/
+prisma/migrations/
+infra/
+mock-services/
+docs/
+*.md
+package-lock.json
