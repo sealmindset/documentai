@@ -4,6 +4,7 @@ import { wrapUserInput, validatePromptSize } from '@/lib/ai/sanitize'
 import { safeParseJSON, validateAgentOutput, type ValidationRule } from '@/lib/ai/validate'
 import { maskPII, unmaskPII, type PiiMapping } from '@/lib/ai/pii-masker'
 import { sanitizeAIError } from '@/lib/ai/errors'
+import { isBrainEnabled, getContextForAgent } from '@/lib/brain-service'
 import prisma from '@/lib/db'
 import type { AgentConfig, AgentResult, AgentLogEntry } from './types'
 
@@ -12,6 +13,7 @@ export type { PiiMapping }
 
 export abstract class BaseAgent {
   protected config: AgentConfig
+  protected brainContext: string = ''
 
   constructor(config: AgentConfig) {
     this.config = config
@@ -35,6 +37,17 @@ export abstract class BaseAgent {
     return getPrompt(this.systemPromptSlug, this.getDefaultSystemPrompt())
   }
 
+  /** Load relevant brain memories for this agent + optional entity context. */
+  protected async _loadBrainContext(entityType?: string, entityId?: string): Promise<string> {
+    try {
+      const enabled = await isBrainEnabled()
+      if (!enabled) return ''
+      return getContextForAgent(this.config.name, entityType, entityId)
+    } catch {
+      return ''
+    }
+  }
+
   protected async invoke(userPrompt: string): Promise<string> {
     console.warn(`[${this.config.name}] Sending request (tier: ${this.config.tier})`)
 
@@ -50,7 +63,7 @@ export abstract class BaseAgent {
     // Mask PII before sending to AI provider
     const { maskedText, mappings } = maskPII(sanitizedPrompt)
 
-    const systemPrompt = await this.getSystemPrompt()
+    const systemPrompt = await this.getSystemPrompt() + this.brainContext
 
     try {
       const result = await complete(systemPrompt, maskedText, {
@@ -82,7 +95,7 @@ export abstract class BaseAgent {
     // Mask PII before sending to AI provider
     const { maskedText, mappings } = maskPII(sanitizedPrompt)
 
-    const systemPrompt = await this.getSystemPrompt()
+    const systemPrompt = await this.getSystemPrompt() + this.brainContext
 
     try {
       const prompt = `${maskedText}\n\nIMPORTANT: Respond ONLY with valid JSON. Do not include any text before or after the JSON object.`

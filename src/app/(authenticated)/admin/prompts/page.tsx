@@ -1,18 +1,26 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DataTable, Column } from '@/components/ui/data-table'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { MessageSquare, Save, History, Bot } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { PromptCard } from '@/components/prompts/prompt-card'
+import { PromptEditor } from '@/components/prompts/prompt-editor'
+import { getSafetyLevel, type SafetyLevel } from '@/components/prompts/safety-indicator'
+import { MessageSquare, Search, LayoutGrid, List, Bot } from 'lucide-react'
 
 interface ManagedPrompt {
   id: string
@@ -23,6 +31,7 @@ interface ManagedPrompt {
   agentName: string | null
   content: string
   model: string | null
+  status?: string
   temperature: number | null
   maxTokens: number | null
   isActive: boolean
@@ -47,18 +56,14 @@ interface PromptDetail extends ManagedPrompt {
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState<ManagedPrompt[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [filterAgent, setFilterAgent] = useState<string>('all')
+  const [filterCategory, setFilterCategory] = useState<string>('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
-  // Editor state
   const [editPrompt, setEditPrompt] = useState<PromptDetail | null>(null)
-  const [editContent, setEditContent] = useState('')
-  const [changeSummary, setChangeSummary] = useState('')
-  const [saving, setSaving] = useState(false)
 
-  // Version history state
-  const [historyPrompt, setHistoryPrompt] = useState<PromptDetail | null>(null)
-
-  const fetchPrompts = useCallback(async (showLoader = false) => {
-    if (showLoader) setLoading(true)
+  const fetchPrompts = useCallback(async () => {
     const res = await fetch('/api/admin/prompts')
     if (res.ok) setPrompts(await res.json())
     setLoading(false)
@@ -76,171 +81,146 @@ export default function PromptsPage() {
   async function openEditor(promptId: string) {
     const res = await fetch(`/api/admin/prompts/${promptId}`)
     if (res.ok) {
-      const detail: PromptDetail = await res.json()
-      setEditPrompt(detail)
-      setEditContent(detail.content)
-      setChangeSummary('')
+      setEditPrompt(await res.json())
     }
   }
 
-  async function openHistory(promptId: string) {
-    const res = await fetch(`/api/admin/prompts/${promptId}`)
-    if (res.ok) {
-      setHistoryPrompt(await res.json())
+  const agents = [...new Set(prompts.map((p) => p.agentName).filter(Boolean))] as string[]
+  const categories = [...new Set(prompts.map((p) => p.category))]
+
+  const filtered = prompts.filter((p) => {
+    if (search) {
+      const q = search.toLowerCase()
+      const match =
+        p.name.toLowerCase().includes(q) ||
+        p.slug.toLowerCase().includes(q) ||
+        (p.description?.toLowerCase().includes(q)) ||
+        (p.agentName?.toLowerCase().includes(q))
+      if (!match) return false
     }
+    if (filterAgent !== 'all' && p.agentName !== filterAgent) return false
+    if (filterCategory !== 'all' && p.category !== filterCategory) return false
+    return true
+  })
+
+  const stats = {
+    total: prompts.length,
+    published: prompts.filter((p) => p.status === 'published' || (!p.status && p.isActive)).length,
+    draft: prompts.filter((p) => p.status === 'draft').length,
+    agents: agents.length,
   }
-
-  async function savePrompt() {
-    if (!editPrompt) return
-    setSaving(true)
-
-    const res = await fetch(`/api/admin/prompts/${editPrompt.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: editContent,
-        changeSummary: changeSummary || undefined,
-      }),
-    })
-
-    if (res.ok) {
-      setEditPrompt(null)
-      fetchPrompts()
-    }
-    setSaving(false)
-  }
-
-  async function toggleActive(prompt: ManagedPrompt) {
-    await fetch(`/api/admin/prompts/${prompt.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: !prompt.isActive }),
-    })
-    fetchPrompts()
-  }
-
-  const columns: Column<ManagedPrompt>[] = [
-    {
-      key: 'agentName',
-      header: 'Agent',
-      sortable: true,
-      filterable: true,
-      filterValue: (row) => row.agentName || 'System',
-      render: (row) => (
-        <div className="flex items-center gap-1.5">
-          <Bot className="h-4 w-4 text-muted-foreground" />
-          <span className="font-mono text-sm">{row.agentName || '—'}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'name',
-      header: 'Name',
-      sortable: true,
-      render: (row) => (
-        <div>
-          <div className="font-medium">{row.name}</div>
-          <div className="text-xs text-muted-foreground font-mono">{row.slug}</div>
-        </div>
-      ),
-    },
-    {
-      key: 'category',
-      header: 'Category',
-      sortable: true,
-      filterable: true,
-      render: (row) => <Badge variant="outline">{row.category}</Badge>,
-    },
-    {
-      key: 'model',
-      header: 'Tier',
-      filterable: true,
-      filterValue: (row) => row.model || 'Default',
-      render: (row) => (
-        <span className="text-sm text-muted-foreground">{row.model || '—'}</span>
-      ),
-    },
-    {
-      key: '_count.versions',
-      header: 'Versions',
-      sortable: true,
-      className: 'text-center',
-      render: (row) => <span className="text-sm">{row._count.versions}</span>,
-    },
-    {
-      key: 'isActive',
-      header: 'Status',
-      filterable: true,
-      filterValue: (row) => row.isActive ? 'Active' : 'Inactive',
-      render: (row) => (
-        <Badge
-          variant={row.isActive ? 'low' : 'critical'}
-          className="cursor-pointer"
-          onClick={(e) => { e.stopPropagation(); toggleActive(row) }}
-        >
-          {row.isActive ? 'Active' : 'Inactive'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'updatedAt',
-      header: 'Last Updated',
-      sortable: true,
-      render: (row) => (
-        <div className="text-sm text-muted-foreground">
-          {new Date(row.updatedAt).toLocaleDateString()}
-          {row.updatedBy && <div className="text-xs">by {row.updatedBy}</div>}
-        </div>
-      ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      className: 'text-right',
-      render: (row) => (
-        <div className="space-x-1" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" variant="outline" onClick={() => openEditor(row.id)}>
-            Edit
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => openHistory(row.id)}
-            disabled={row._count.versions === 0}
-          >
-            <History className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ]
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <MessageSquare className="h-6 w-6" />
           AI Prompt Management
         </h1>
         <p className="text-muted-foreground mt-1">
-          Edit and manage AI agent prompts without redeploying
+          Edit, test, and publish AI agent prompts with safety validation
         </p>
       </div>
 
-      {/* Prompts table */}
-      <Card>
-        <CardContent className="pt-6">
-          <DataTable
-            columns={columns}
-            data={prompts}
-            loading={loading}
-            searchPlaceholder="Search prompts..."
-            emptyIcon={<MessageSquare className="h-12 w-12 text-gray-300 mb-3" />}
-            emptyTitle="No prompts found"
-            emptyDescription="Prompts will appear here when configured."
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard label="Total Prompts" value={stats.total} />
+        <StatCard label="Published" value={stats.published} variant="low" />
+        <StatCard label="Drafts" value={stats.draft} variant="medium" />
+        <StatCard label="Agents" value={stats.agents} variant="info" />
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search prompts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
           />
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex gap-2">
+          <Select value={filterAgent} onValueChange={setFilterAgent}>
+            <SelectTrigger className="w-[160px]">
+              <Bot className="h-4 w-4 mr-1" />
+              <SelectValue placeholder="Agent" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Agents</SelectItem>
+              {agents.map((a) => (
+                <SelectItem key={a} value={a}>{a}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex border rounded-md">
+            <Button
+              size="icon"
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              className="h-9 w-9 rounded-r-none"
+              onClick={() => setViewMode('grid')}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              className="h-9 w-9 rounded-l-none"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Prompt cards */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-48 rounded-xl border bg-muted animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12">
+          <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="font-medium text-muted-foreground">No prompts found</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {search || filterAgent !== 'all' || filterCategory !== 'all'
+              ? 'Try adjusting your filters'
+              : 'Prompts will appear here when configured'}
+          </p>
+        </div>
+      ) : (
+        <div className={
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+            : 'flex flex-col gap-3'
+        }>
+          {filtered.map((prompt) => (
+            <PromptCard
+              key={prompt.id}
+              prompt={prompt}
+              safetyLevel={getSafetyLevel(prompt) as SafetyLevel}
+              onEdit={() => openEditor(prompt.id)}
+              onHistory={() => openEditor(prompt.id)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Editor Dialog */}
       <Dialog open={!!editPrompt} onOpenChange={() => setEditPrompt(null)}>
@@ -248,108 +228,36 @@ export default function PromptsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
-              Edit: {editPrompt?.name}
+              {editPrompt?.name}
             </DialogTitle>
           </DialogHeader>
           {editPrompt && (
-            <div className="space-y-4">
-              <div className="flex gap-2 text-sm text-muted-foreground">
-                <Badge variant="outline">{editPrompt.agentName}</Badge>
-                <Badge variant="outline">{editPrompt.category}</Badge>
-                <span className="font-mono">{editPrompt.slug}</span>
-              </div>
-
-              {editPrompt.description && (
-                <p className="text-sm text-muted-foreground">{editPrompt.description}</p>
-              )}
-
-              <div>
-                <label className="text-sm font-medium">Prompt Content</label>
-                <textarea
-                  className="w-full mt-1 p-3 rounded-md border bg-background font-mono text-sm min-h-[400px] resize-y"
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Change Summary (optional)</label>
-                <Input
-                  placeholder="What did you change and why?"
-                  value={changeSummary}
-                  onChange={(e) => setChangeSummary(e.target.value)}
-                />
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-muted-foreground">
-                  {editContent.length} characters
-                  {editContent !== editPrompt.content && (
-                    <span className="text-yellow-600 ml-2">Modified</span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setEditContent(editPrompt.content)}>
-                    Reset
-                  </Button>
-                  <Button
-                    onClick={savePrompt}
-                    disabled={saving || editContent === editPrompt.content}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {saving ? 'Saving...' : 'Save'}
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <PromptEditor
+              prompt={editPrompt}
+              onSaved={() => { setEditPrompt(null); fetchPrompts() }}
+            />
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
 
-      {/* Version History Dialog */}
-      <Dialog open={!!historyPrompt} onOpenChange={() => setHistoryPrompt(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Version History: {historyPrompt?.name}
-            </DialogTitle>
-          </DialogHeader>
-          {historyPrompt && (
-            <div className="space-y-4">
-              {historyPrompt.versions.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  No version history yet. Versions are created when you edit a prompt.
-                </p>
-              ) : (
-                historyPrompt.versions.map((v) => (
-                  <Card key={v.id}>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-sm font-medium">
-                          Version {v.version}
-                        </CardTitle>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(v.createdAt).toLocaleString()}
-                          {v.changedBy && ` by ${v.changedBy}`}
-                        </div>
-                      </div>
-                      {v.changeSummary && (
-                        <p className="text-sm text-muted-foreground">{v.changeSummary}</p>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="text-xs font-mono bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap max-h-40">
-                        {v.content}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+function StatCard({ label, value, variant }: {
+  label: string
+  value: number
+  variant?: 'low' | 'medium' | 'info'
+}) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-2xl font-bold mt-0.5">
+        {variant ? (
+          <Badge variant={variant} className="text-lg px-2 py-0.5">{value}</Badge>
+        ) : (
+          value
+        )}
+      </p>
     </div>
   )
 }

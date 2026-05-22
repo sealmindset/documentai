@@ -714,3 +714,33 @@ model SharePointFile {
   @@index([status])
   @@map("sharepoint_files")
 }
+
+// ============================================
+// BRAIN LAYER: AI MEMORY SYSTEM
+// ============================================
+
+model BrainMemory {
+  id          String   @id @default(cuid())
+  agentName   String?  // Which agent created this (null = user-created)
+  entityType  String?  // "Client", "Contact", "Court", etc.
+  entityId    String?  // ID of the related entity
+  category    String   // "preference", "procedure", "relationship", "fact", "pattern"
+  content     String   // The actual memory content
+  tags        String   @default("[]") // JSON array of tags for search
+  confidence  Float    @default(1.0)  // 0.0–1.0, decays over time
+  accessCount Int      @default(0)    // How often this memory has been retrieved
+  lastAccessedAt DateTime?
+  source      String?  // What triggered this memory (e.g., "ARIA analysis of doc xyz")
+  createdBy   String?  // User who created or approved
+  isApproved  Boolean  @default(false) // Agent-created memories need approval
+  isArchived  Boolean  @default(false)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([agentName])
+  @@index([category])
+  @@index([isApproved, isArchived])
+  @@map("brain_memories")
+}

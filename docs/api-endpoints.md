@@ -238,6 +238,20 @@ All orchestrator routes require `agents:create` permission and are rate limited.
 
 ---
 
+## Brain Layer (AI Memory)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/brain` | `brain:view` | List memories (supports `?category=`, `?entityType=`, `?agentName=`, `?approvedOnly=`, `?limit=`) |
+| GET | `/api/brain?action=stats` | `brain:view` | Get memory statistics (totals, by-category, by-agent) |
+| GET | `/api/brain?action=decay` | `brain:edit` | Run confidence decay on stale memories |
+| POST | `/api/brain` | `brain:create` | Create a new memory |
+| GET | `/api/brain/:id` | `brain:view` | Get a specific memory (increments access count) |
+| PUT | `/api/brain/:id` | `brain:edit` | Update memory (content, category, tags, approval, archive) |
+| DELETE | `/api/brain/:id` | `brain:delete` | Delete a memory |
+
+---
+
 ## Middleware
 
 **File:** `src/middleware.ts`

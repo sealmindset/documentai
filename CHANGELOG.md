@@ -2,6 +2,24 @@
 
 All notable changes to Document AI Platform will be documented in this file.
 
+## [4.4.0] - 2026-05-21
+
+### Added
+- **Brain Layer: AI Memory System** — persistent context that AI agents carry across sessions
+  - `BrainMemory` model with categories (preference, procedure, relationship, fact, pattern), confidence decay, tag-based search
+  - `brain-service.ts`: CRUD, relevance search, entity/agent context loading, automatic confidence decay for stale memories
+  - BaseAgent integration: `_loadBrainContext()` injects relevant memories into system prompts, `brainContext` field appended to all AI calls
+  - API routes: `/api/brain` (list, search, create, stats, decay), `/api/brain/[id]` (get, update, delete)
+  - Admin UI (`/admin/ai-memory`): full memory management with stats, category/source breakdowns, approve/archive/delete, create, search/filter
+  - User UI (`/settings/ai-memory`): view and add memories, linked from Settings page
+  - RBAC: `brain.view/create/edit/delete` permissions, ADMIN gets full access, ANALYST gets view+create
+  - Feature flag: `brain.enabled` app setting (defaults true)
+- **Prompt Management: Tier 2 Standard upgrade** — card-based registry with guided editing
+  - 5 scaffold components: `prompt-card`, `prompt-editor`, `safety-indicator`, `variable-pill`, `version-timeline`
+  - Save Draft → Test → Publish workflow with safety validation and adversarial testing
+  - Version history with restore, variable highlighting, grid/list view toggle
+  - Sidebar label updated from "Prompts" to "AI Instructions"
+
 ## [4.3.0] - 2026-05-21
 
 ### Added

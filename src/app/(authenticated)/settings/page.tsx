@@ -3,11 +3,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/auth-context'
+import Link from 'next/link'
 import {
   Shield,
   Bot,
   Database,
   Bell,
+  Brain,
+  ArrowRight,
 } from 'lucide-react'
 
 const AI_AGENTS = [
@@ -150,6 +153,31 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Memory */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              AI Memory
+            </CardTitle>
+            <CardDescription>
+              Persistent context that AI agents use across sessions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500 mb-3">
+              The Brain Layer allows AI agents to remember important details about your cases, contacts, courts, and preferences.
+              Memories are built automatically as agents process your work, and you can also add them manually.
+            </p>
+            <Link href="/settings/ai-memory">
+              <Badge variant="info" className="cursor-pointer gap-1 hover:opacity-80 transition-opacity">
+                View AI Memory
+                <ArrowRight className="h-3 w-3" />
+              </Badge>
+            </Link>
           </CardContent>
         </Card>
 

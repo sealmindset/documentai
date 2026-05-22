@@ -7,9 +7,9 @@
 ## Medium Priority
 
 - [x] ~~**Testing: Add test suite** - Vitest (83 unit tests) + Playwright E2E (smoke tests). Run with `npm test` and `npm run test:e2e`~~
-- [ ] **Standards: Prompt Management upgrade** - Current Tier 2 Outdated (3 of 6 scaffold tables, 1 admin page, 0 scaffold components). Upgrade to Tier 2 Standard with card-based registry, guided editing, version history, safety indicators
+- [x] ~~**Standards: Prompt Management upgrade** - Upgraded to Tier 2 Standard: card-based registry, 5 scaffold components (prompt-card, prompt-editor, safety-indicator, variable-pill, version-timeline), save→test→publish workflow, safety validation, version restore, grid/list view toggle~~
 - [x] ~~**Standards: Wrap existing API routes with withRequestLog** - 21 route files (55+ handlers) wrapped: clients, contacts, orchestrator, documents, emails, reports, issues, case-reviews, generate, sharepoint~~
-- [ ] **Standards: ESLint warnings cleanup** - 55 warnings (unused vars, any types, console.log). Non-blocking but should be cleaned up
+- [x] ~~**Standards: ESLint warnings cleanup** - All 93 warnings fixed (unused vars, any types, console.log) across 38 files. 0 warnings remaining~~
 - [ ] **Onboarding: Add business criticality selection** - The onboarding wizard defaults to STANDARD business criticality; add a selector step for data types accessed, system integrations, PII/PHI/PCI flags, and criticality level
 - [x] **Naming: Full terminology normalization** - Renamed all TPRM terminology to legal-centric: Vendor→Client, RiskProfile→ClientProfile, RiskAssessment→CaseReview, RiskFinding→Issue, RemediationAction→ActionItem. DB migration, API routes, frontend, agents, tests all updated
 
@@ -17,7 +17,7 @@
 
 - [ ] **CI/CD: Set up GitHub Actions** - Quality gate workflow created (.github/workflows/quality-gate.yml) but CI/CD deployment pipeline still needed
 - [ ] **Dependencies: postcss vulnerability in Next.js** - 2 moderate advisories (GHSA-qx2v-qp2m-jg93) in postcss 8.4.31 bundled inside next.js. No fix until Next.js 16.3.0+ ships with postcss ≥8.5.10. Build-time CSS processor, low runtime risk
-- [ ] **Standards: Brain Layer** - AI memory system for persistent context across sessions. Nice-to-have enhancement
+- [x] ~~**Standards: Brain Layer** - AI memory system with BrainMemory table, brain-service (CRUD + search + decay), BaseAgent integration (_loadBrainContext), API routes (/api/brain), admin page (/admin/ai-memory), user page (/settings/ai-memory), RBAC permissions, feature flag (brain.enabled)~~
 - [ ] **Pre-commit hooks** - Install pre-commit tool: `pip install pre-commit && pre-commit install`
 - [x] ~~**Integration: SharePoint document pickup** - SharePoint integration via Graph API with configurable site/library connections, file sync tracking, AURA auto-extraction, and management UI~~
 

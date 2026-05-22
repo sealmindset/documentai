@@ -20,6 +20,7 @@ const APP_RESOURCES = [
   'templates',
   'generated-documents',
   'emails',
+  'brain',
 ]
 
 const SYSTEM_RESOURCES = ['users', 'roles', 'logs']
@@ -2088,6 +2089,7 @@ Rules:
     { key: 'firm.attorney_name', value: 'James Vanmerven', groupName: 'firm', displayName: 'Primary Attorney', description: 'Default attorney name for document signatures', valueType: 'string' },
     { key: 'firm.bar_number', value: '0401234', groupName: 'firm', displayName: 'Bar Number', description: 'Attorney bar registration number', valueType: 'string' },
     { key: 'email.auto_cc_firm', value: 'false', groupName: 'email', displayName: 'Auto-CC Firm Email', description: 'Automatically CC the firm email on outbound emails (requires a valid M365 mailbox)', valueType: 'boolean' },
+    { key: 'brain.enabled', value: 'true', groupName: 'AI Configuration', displayName: 'Brain Layer Enabled', description: 'Enable AI memory system for persistent context across agent sessions', valueType: 'boolean' },
   ]
 
   for (const setting of firmSettings) {

@@ -24,6 +24,7 @@ import {
   FileOutput,
   Mail,
   CloudDownload,
+  Brain,
 } from 'lucide-react'
 
 interface NavItem {
@@ -52,7 +53,8 @@ const navigation: NavItem[] = [
 const adminNavigation: NavItem[] = [
   { name: 'Users', href: '/admin/users', icon: Users, permission: 'users.view' },
   { name: 'Roles', href: '/admin/roles', icon: KeyRound, permission: 'roles.view' },
-  { name: 'Prompts', href: '/admin/prompts', icon: MessageSquare, permission: 'prompts.view' },
+  { name: 'AI Instructions', href: '/admin/prompts', icon: MessageSquare, permission: 'prompts.view' },
+  { name: 'AI Memory', href: '/admin/ai-memory', icon: Brain, permission: 'brain.view' },
   { name: 'Activity Logs', href: '/admin/logs', icon: Activity, permission: 'logs.view' },
   { name: 'App Settings', href: '/admin/settings', icon: Settings, permission: 'settings.view' },
 ]

@@ -62,6 +62,7 @@ Ingestion Pipeline: SharePoint → AURA (auto-download → extraction & classifi
 | EmailTemplate | `email_templates` | Email templates for ECHO agent |
 | SharePointSync | `sharepoint_syncs` | SharePoint library sync configurations |
 | SharePointFile | `sharepoint_files` | Tracked files from SharePoint syncs |
+| BrainMemory | `brain_memories` | AI persistent memory (context, preferences, patterns) |
 
 ## Project Structure
 
