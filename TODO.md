@@ -12,6 +12,9 @@
 - [x] ~~**Standards: ESLint warnings cleanup** - All 93 warnings fixed (unused vars, any types, console.log) across 38 files. 0 warnings remaining~~
 - [x] ~~**Onboarding: Add business criticality selection** - Case Classification step added: priority (Standard/Important/Critical), data sensitivity (PII/PHI/PCI), data types, and system integrations — all passed to LEXA agent~~
 - [x] **Naming: Full terminology normalization** - Renamed all TPRM terminology to legal-centric: Vendor→Client, RiskProfile→ClientProfile, RiskAssessment→CaseReview, RiskFinding→Issue, RemediationAction→ActionItem. DB migration, API routes, frontend, agents, tests all updated
+- [x] **Firm rebrand** - Vanmerven → Vanmeveren across 24 files, staff name updates, role restructure (MANAGING_PARTNER, ATTORNEY, PARALEGAL)
+- [x] **Attorney Portal** - Full attorney experience with briefing, cases, calendar (4 views + CRUD + M365 sync), document upload with AI agents, contact management
+- [x] **Entra ID cutover** - Removed mock-oidc dependency, real Entra credentials, seed users with @vanmeverenlawfirm.com emails
 
 ## Low Priority
 

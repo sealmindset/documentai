@@ -2,6 +2,24 @@
 
 All notable changes to Document AI Platform will be documented in this file.
 
+## [5.0.0] - 2026-05-22
+
+### Added
+- **Attorney Portal** — dedicated mobile-first experience at `/attorney`
+  - Briefing page with AI-generated daily summary, upcoming deadlines, case alerts
+  - Cases list with search, priority badges, and case detail with 5 tabs (Overview, Documents, Contacts, Issues, Tasks)
+  - Full calendar with month/week/day/agenda views, event CRUD (Court Dates, Deadlines, Client Meetings, General), and M365 Outlook two-way sync
+  - Document upload with drag-and-drop, 50MB limit, AURA/DORA/ARIA agent pipeline processing with live status
+  - Contact management: create new contacts or link existing ones to cases with role assignment (11 legal roles)
+  - Responsive design: bottom navigation, floating action buttons, touch-optimized for mobile
+
+### Changed
+- **Firm rebrand: Vanmerven → Vanmeveren** — corrected spelling across all source files, agents, docs, and seed data
+- **Staff changes** — Michael Torres → Debbie Sampson (Paralegal), Laura Vanmerven → Brian Vanmeveren, James Vanmerven/Sarah Chen/David Park → Emily Crabtree
+- **Role restructure** — ANALYST → MANAGING_PARTNER, VIEWER → ATTORNEY (full CRUD), VENDOR → PARALEGAL
+- **Entra ID cutover** — removed mock-oidc from default Docker profile, entrypoint skips OIDC health check for external providers, seed users use @vanmeverenlawfirm.com emails with null oidcSubject for Entra binding on first login
+- Seed users: Rob Vance (Admin), Brian Vanmeveren (Managing Partner), Emily Crabtree (Attorney), Debbie Sampson (Paralegal)
+
 ## [4.4.0] - 2026-05-21
 
 ### Added
