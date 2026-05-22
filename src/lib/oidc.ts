@@ -56,7 +56,8 @@ export async function getOIDCConfig(): Promise<OIDCConfig> {
  */
 export async function getAuthorizationUrl(
   redirectUri: string,
-  state: string
+  state: string,
+  loginHint?: string
 ): Promise<string> {
   const config = await getOIDCConfig()
   const params = new URLSearchParams({
@@ -66,6 +67,7 @@ export async function getAuthorizationUrl(
     scope: 'openid email profile',
     state,
   })
+  if (loginHint) params.set('login_hint', loginHint)
 
   return `${config.authorization_endpoint}?${params.toString()}`
 }

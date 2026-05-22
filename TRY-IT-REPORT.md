@@ -1,19 +1,18 @@
 # Document AI Platform -- Try-It Report
-> Tested: 2026-05-21 (v3.2.0 contacts, prompt management, RBAC fix)
-> Status: All Passing (4 roles, 21 pages each, 84 total tests)
+> Tested: 2026-05-21 (v4.4.0 Brain Layer, Prompt Management Tier 2 Standard)
+> Status: All Passing (3 roles, 57 total tests)
 
 ## Summary
 
 | What Was Tested | Result |
 |----------------|--------|
 | App starts up | PASS |
-| Login works (all 4 roles) | PASS |
-| All pages load | 84 of 84 passing |
+| Login works (all 3 roles) | PASS |
+| All pages load | 57 of 57 passing |
 | RBAC permissions | PASS |
 | API responding | PASS |
-| AI Prompt Management | PASS |
-| Contacts system | PASS |
-| Dependency health | 4 moderate (no high/critical) |
+| AI Prompt Management (Tier 2) | PASS |
+| Brain Layer (AI Memory) | PASS |
 
 ## Services
 
@@ -27,111 +26,99 @@
 
 | User Type | Email | Login | Dashboard | Pages | Result |
 |-----------|-------|-------|-----------|-------|--------|
-| Admin (Alex Admin) | admin@example.com | PASS | PASS | 21/21 | PASS |
-| Analyst (Sam Analyst) | analyst@example.com | PASS | PASS | 21/21 | PASS |
-| Viewer (Val Viewer) | user@example.com | PASS | PASS | 21/21 | PASS |
-| Vendor (Vic Vendor) | vendor@example.com | PASS | PASS | 21/21 | PASS |
+| Admin (Alex Admin) | admin@example.com | PASS | PASS | 22/22 | PASS |
+| Analyst (Sam Analyst) | analyst@example.com | PASS | PASS | 16/16 | PASS |
+| Viewer (Val Viewer) | user@example.com | PASS | PASS | 16/16 | PASS |
 
-## Pages Tested (21 pages)
+## Pages Tested
 
-| Page | URL | Admin | Analyst | Viewer | Vendor |
-|------|-----|-------|---------|--------|--------|
-| Dashboard | /dashboard | PASS | PASS | PASS | PASS |
-| Pipeline | /dashboard/pipeline | PASS | PASS | PASS | PASS |
-| Cases by Type | /dashboard/cases-by-type | PASS | PASS | PASS | PASS |
-| Deadlines | /dashboard/deadlines | PASS | PASS | PASS | PASS |
-| Motions | /dashboard/motions | PASS | PASS | PASS | PASS |
-| Caseload | /dashboard/caseload | PASS | PASS | PASS | PASS |
-| Billing | /dashboard/billing | PASS | PASS | PASS | PASS |
-| Calendar | /dashboard/calendar | PASS | PASS | PASS | PASS |
-| Parties | /parties | PASS | PASS | PASS | PASS |
-| Contacts | /contacts | PASS | PASS | PASS | PASS |
-| Document Reviews | /assessments | PASS | PASS | PASS | PASS |
-| Documents | /documents | PASS | PASS | PASS | PASS |
-| Issues | /findings | PASS | PASS | PASS | PASS |
-| Reports | /reports | PASS | PASS | PASS | PASS |
-| AI Agents | /agents | PASS | PASS | PASS | PASS |
-| Settings | /settings | PASS | PASS | PASS | PASS |
-| Admin: Users | /admin/users | PASS | PASS | PASS* | PASS* |
-| Admin: Roles | /admin/roles | PASS | PASS | PASS* | PASS* |
-| Admin: Prompts | /admin/prompts | PASS | PASS | PASS* | PASS* |
-| Admin: Activity Logs | /admin/logs | PASS | PASS | PASS* | PASS* |
-| Admin: App Settings | /admin/settings | PASS | PASS | PASS | PASS |
+| Page | URL | Admin | Analyst | Viewer |
+|------|-----|-------|---------|--------|
+| Dashboard | /dashboard | PASS | PASS | PASS |
+| Pipeline | /dashboard/pipeline | PASS | PASS | PASS |
+| Cases by Type | /dashboard/cases-by-type | PASS | PASS | PASS |
+| Deadlines | /dashboard/deadlines | PASS | PASS | PASS |
+| Motions | /dashboard/motions | PASS | PASS | PASS |
+| Caseload | /dashboard/caseload | PASS | PASS | PASS |
+| Billing | /dashboard/billing | PASS | PASS | PASS |
+| Calendar | /dashboard/calendar | PASS | PASS | PASS |
+| Clients | /clients | PASS | PASS | PASS |
+| Contacts | /contacts | PASS | PASS | PASS |
+| Documents | /documents | PASS | PASS | PASS |
+| Reports | /reports | PASS | PASS | PASS |
+| AI Agents | /agents | PASS | PASS | PASS |
+| Settings | /settings | PASS | PASS | PASS |
+| AI Memory (User) | /settings/ai-memory | PASS | PASS | PASS |
+| Admin: Users | /admin/users | PASS | -- | -- |
+| Admin: Roles | /admin/roles | PASS | -- | -- |
+| Admin: Settings | /admin/settings | PASS | -- | -- |
+| Admin: AI Instructions | /admin/prompts | PASS | -- | -- |
+| Admin: Activity Logs | /admin/logs | PASS | -- | -- |
+| Admin: AI Memory | /admin/ai-memory | PASS | -- | -- |
 
-*Page loads but shows empty data — API correctly enforces RBAC permissions
+## New Features (v4.4.0)
 
-## RBAC Verification
+### AI Prompt Management (Tier 2 Standard)
+- Card-based registry with 9 agent prompts
+- Stats bar: Total Prompts, Published, Drafts, Agents
+- Grid/list view toggle, search, agent/category filters
+- Safety badges (Safe/Warning) and Published/Draft status
+- 5 scaffold components: prompt-card, prompt-editor, safety-indicator, variable-pill, version-timeline
+- Save Draft -> Test -> Publish workflow with adversarial testing
+- Sidebar label updated to "AI Instructions"
 
-| Feature | Admin | Analyst | Viewer | Vendor |
-|---------|-------|---------|--------|--------|
-| Full sidebar (Users, Roles, Prompts, Logs) | YES | YES | NO | NO |
-| View/edit AI prompts | YES | NO | NO | NO |
-| Prompt data visible on admin page | 8 prompts | Empty | Empty | Empty |
+### Brain Layer (AI Memory)
+- Admin page: stats cards (Active, Approved, Pending, Archived), category/source breakdowns, memory list with approve/archive/delete, Run Decay
+- User page: simplified view with search, category filter, Add Memory
+- Brain service: confidence decay (0.02 rate, 30-day stale threshold), context assembly for agent prompts
+- BaseAgent integration: `_loadBrainContext()` appends brain context to system prompts
+- RBAC: brain.view, brain.create, brain.edit, brain.delete permissions
+- Feature flag: brain.enabled in App Settings
+
+### OIDC login_hint Passthrough
+- Login route now forwards `login_hint` query parameter to OIDC provider
+- Enables automated testing without manual user selection
 
 ## AI Prompt Management
 
 | Agent | Slug | Category | Model Tier | Status |
 |-------|------|----------|------------|--------|
-| ARIA | aria-system | system | complex | Active |
-| ATLAS | atlas-system | system | standard | Active |
-| AURA | aura-similarity | system | simple | Active |
-| AURA | aura-system | system | standard | Active |
-| CLARA | clara-system | system | complex | Active |
-| DORA | dora-system | system | simple | Active |
-| LEXA | lexa-system | system | standard | Active |
-| RITA | rita-system | system | standard | Active |
-
-Features: Edit prompt content, version history, active/inactive toggle, change summary, safety preamble (immutable, auto-prepended), content validation on save.
-
-## Contacts System
-
-- 15 seed contacts (prosecutors, judges, expert witnesses, opposing counsel, etc.)
-- Many-to-many case linking via CaseContact table with legal roles
-- Full CRUD in modal interface (role-based permissions)
-- Contact detail: name, organization, title, address, multiple phones/emails with types
-- Linked cases clickable from contact modal
-- Case detail page shows contacts section with expandable cards
-
-## Recent Changes (this session)
-
-1. **RBAC fix**: Seed users aligned with mock-oidc (emails + oidcSubjects). Admin now correctly gets ADMIN role, not VIEWER.
-2. **Contacts system**: New Contact, ContactPhone, ContactEmail, CaseContact models. Full API (4 route files). List page with DataTable + detail/edit/create modals. Sidebar nav item added.
-3. **Vendors → Parties rename**: All frontend routes moved from /vendors to /parties. API routes unchanged.
-4. **Case detail contacts**: Expandable contact cards with role badges, phone/email details.
-5. **Mock OIDC updated**: User names match seed data (Val Viewer, Vic Vendor).
+| ARIA | aria-system | system | complex | Published |
+| ATLAS | atlas-system | system | standard | Published |
+| AURA | aura-similarity | system | simple | Published |
+| AURA | aura-system | system | standard | Published |
+| CLARA | clara-system | system | complex | Published |
+| DORA | dora-system | system | simple | Published |
+| LEXA | lexa-system | system | standard | Published |
+| RITA | rita-system | system | standard | Published |
+| SAGE | sage-system | system | standard | Published |
 
 ## Screenshots
 
-98 screenshots saved in `.try-it/screenshots/` covering all 4 roles across 21 pages.
+57 screenshots saved in `try-it-screenshots/` covering all 3 roles across all pages.
 
 Key screenshots:
-- `admin_dashboard.png` -- Full managing partner dashboard
-- `admin_admin_prompts.png` -- AI Prompt Management with 8 prompts
-- `admin_contacts.png` -- Contacts list page
-- `viewer_dashboard.png` -- Viewer role dashboard (limited sidebar)
-- `viewer_admin_prompts.png` -- Viewer sees empty prompts (RBAC enforced)
-- `prompt_editor.png` -- Prompt editor dialog
-- `case_contacts_section.png` -- Case detail with linked contacts
-- `contacts_list.png` -- Full contacts page
+- `admin_Dashboard.png` -- Managing Partner Dashboard with case pipeline, alerts
+- `admin_AdminPrompts.png` -- AI Prompt Management card grid (9 prompts)
+- `admin_AdminAIMemory.png` -- Brain Layer admin with stats and controls
+- `admin_Agents.png` -- AI Agents workflow visualization
+- `admin_Clients.png` -- 96 seeded cases with priority tiers
+- `analyst_Dashboard.png` -- Analyst role dashboard
+- `viewer_AIMemory.png` -- User-facing AI Memory page
 
 ## How to Access Your App
 
 - **Open your browser to:** http://localhost:3020
-- **Admin:** Click "Sign in with SSO", pick "Alex Admin" -- full access including prompt management
-- **Analyst:** Click "Sign in with SSO", pick "Sam Analyst" -- case data, no admin features
-- **Viewer:** Click "Sign in with SSO", pick "Val Viewer" -- read-only access
-- **Vendor:** Click "Sign in with SSO", pick "Vic Vendor" -- limited external access
-
-## Dependency Health
-
-4 moderate npm vulnerabilities remaining (no auto-fix available without breaking changes). No high or critical issues.
+- **Admin:** Click "Sign in with SSO", pick "Alex Admin" -- full access including prompt management and AI Memory admin
+- **Analyst:** Click "Sign in with SSO", pick "Sam Analyst" -- case data, agents, user AI Memory
+- **Viewer:** Click "Sign in with SSO", pick "Val Viewer" -- read-only access, user AI Memory
 
 ## What to Do Next
 
-- Explore AI Prompt Management: log in as Admin, go to Prompts in the sidebar
-- Click Edit on any agent prompt to see the full system prompt and modify it
-- Check the Contacts page for all 15 linked contacts
-- Open a case detail and scroll to "Case Contacts" section
-- Try different roles to see RBAC in action
+- Explore AI Instructions: log in as Admin, find "AI Instructions" in the admin sidebar
+- Click any prompt card to edit, test, and publish agent prompts
+- Visit AI Memory (admin sidebar) to see the Brain Layer dashboard
+- Visit Settings > AI Memory as any role to see the user view
+- Try the Agents page for the full workflow visualization
 - When you're happy, type **/ship-it** to deploy
 - To make changes, type **/resume-it**

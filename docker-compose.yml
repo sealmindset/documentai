@@ -13,8 +13,8 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-docai_user}:${POSTGRES_PASSWORD:-docai_pass}@db:5432/${POSTGRES_DB:-docai_db}
       - NEXTAUTH_URL=http://localhost:3020
       - NODE_ENV=production
-      # OIDC -- issuer must use Docker-internal address (not localhost)
-      - OIDC_ISSUER_URL=${OIDC_INTERNAL_ISSUER_URL:-http://mock-oidc:10090}
+      # OIDC -- pass through from .env (Entra, Okta, etc.). Falls back to mock-oidc for dev.
+      - OIDC_ISSUER_URL=${OIDC_ISSUER_URL:-http://mock-oidc:10090}
       - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-mock-oidc-client}
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-mock-oidc-secret}
       - JWT_SECRET=${JWT_SECRET:-docker-dev-jwt-secret-not-for-production}

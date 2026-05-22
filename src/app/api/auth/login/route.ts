@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthorizationUrl } from '@/lib/oidc'
 import crypto from 'crypto'
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     // Build the callback URL through the frontend (same-origin proxy)
     const frontendUrl =
@@ -12,7 +12,8 @@ export async function GET(_request: NextRequest) {
     // Generate state parameter for CSRF protection
     const state = crypto.randomBytes(16).toString('hex')
 
-    const authUrl = await getAuthorizationUrl(redirectUri, state)
+    const loginHint = request.nextUrl.searchParams.get('login_hint') || undefined
+    const authUrl = await getAuthorizationUrl(redirectUri, state, loginHint)
 
     // Next.js 16 strips Set-Cookie headers from redirect responses.
     // Workaround: return an HTML page that sets the cookie and then redirects.

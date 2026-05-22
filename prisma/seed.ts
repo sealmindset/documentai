@@ -921,23 +921,33 @@ async function main() {
     console.log(`  User: ${userDef.email} -> ${userDef.roleName} (${user.id})`)
   }
 
-  // 4. Create clients
+  // 4. Create clients (skip if already exists by name)
   const clientMap: Record<string, string> = {}
 
   for (const c of CLIENTS) {
-    const client = await prisma.client.upsert({
-      where: { id: c.name.toLowerCase().replace(/\s+/g, '-') },
-      update: {},
-      create: { ...c, annualSpend: c.annualSpend },
+    const existing = await prisma.client.findFirst({ where: { name: c.name } })
+    if (existing) {
+      clientMap[c.name] = existing.id
+      console.log(`  Client (exists): ${c.name}`)
+      continue
+    }
+    const client = await prisma.client.create({
+      data: { ...c, annualSpend: c.annualSpend },
     })
     clientMap[c.name] = client.id
     console.log(`  Client: ${c.name}`)
   }
 
-  // 5. Create client profiles
+  // 5. Create client profiles (skip if client already has one)
   for (const cp of CLIENT_PROFILES) {
     const clientId = clientMap[cp.clientName]
     if (!clientId) continue
+
+    const existingProfile = await prisma.clientProfile.findFirst({ where: { clientId } })
+    if (existingProfile) {
+      console.log(`  Client Profile (exists): ${cp.clientName}`)
+      continue
+    }
 
     await prisma.clientProfile.create({
       data: {
@@ -958,10 +968,16 @@ async function main() {
     console.log(`  Client Profile: ${cp.clientName} -> ${cp.priorityTier}`)
   }
 
-  // 6. Create documents
+  // 6. Create documents (skip if document already exists for this client)
+  let docCreated = 0
   for (const d of DOCUMENTS) {
     const clientId = clientMap[d.clientName]
     if (!clientId) continue
+
+    const exists = await prisma.document.findFirst({
+      where: { clientId, documentName: d.documentName },
+    })
+    if (exists) continue
 
     await prisma.document.create({
       data: {
@@ -978,14 +994,24 @@ async function main() {
         analysisResult: d.analysisResult,
       },
     })
+    docCreated++
   }
-  console.log(`  ${DOCUMENTS.length} documents`)
+  console.log(`  ${docCreated} documents (${DOCUMENTS.length - docCreated} skipped)`)
 
-  // 7. Create case reviews
+  // 7. Create case reviews (skip if already exists for this client+type)
   const caseReviewMap: Record<string, string> = {}
   for (const cr of CASE_REVIEWS) {
     const clientId = clientMap[cr.clientName]
     if (!clientId) continue
+
+    const key = `${cr.clientName}-${cr.assessmentType}-${cr.daysAgo}`
+    const exists = await prisma.caseReview.findFirst({
+      where: { clientId, assessmentType: cr.assessmentType },
+    })
+    if (exists) {
+      caseReviewMap[key] = exists.id
+      continue
+    }
 
     const caseReview = await prisma.caseReview.create({
       data: {
@@ -999,17 +1025,25 @@ async function main() {
         assessmentDate: new Date(Date.now() - cr.daysAgo * 24 * 60 * 60 * 1000),
       },
     })
-    const key = `${cr.clientName}-${cr.assessmentType}-${cr.daysAgo}`
     caseReviewMap[key] = caseReview.id
   }
   console.log(`  ${CASE_REVIEWS.length} case reviews`)
 
-  // 8. Create issues
+  // 8. Create issues (skip if already exists for this client+title)
   const issueMap: Record<string, string> = {}
   const issueDetailMap: Record<string, string> = {}
   for (const iss of ISSUES) {
     const clientId = clientMap[iss.clientName]
     if (!clientId) continue
+
+    const exists = await prisma.issue.findFirst({
+      where: { clientId, title: iss.title },
+    })
+    if (exists) {
+      if (!issueMap[iss.clientName]) issueMap[iss.clientName] = exists.id
+      issueDetailMap[`${iss.clientName}:${iss.title}`] = exists.id
+      continue
+    }
 
     const issue = await prisma.issue.create({
       data: {
@@ -1026,9 +1060,7 @@ async function main() {
         recommendation: iss.recommendation,
       },
     })
-    if (!issueMap[iss.clientName]) {
-      issueMap[iss.clientName] = issue.id
-    }
+    if (!issueMap[iss.clientName]) issueMap[iss.clientName] = issue.id
     issueDetailMap[`${iss.clientName}:${iss.title}`] = issue.id
   }
   console.log(`  ${ISSUES.length} issues`)
@@ -1047,6 +1079,11 @@ async function main() {
     const issueId = issueDetailMap[`${ai.clientName}:${ai.issueTitle}`]
     if (!clientId || !issueId) continue
 
+    const exists = await prisma.actionItem.findFirst({
+      where: { clientId, title: ai.title },
+    })
+    if (exists) continue
+
     await prisma.actionItem.create({
       data: {
         issueId,
@@ -1064,9 +1101,14 @@ async function main() {
   }
   console.log(`  ${actionItemSeeds.length} action items`)
 
-  // 9. Create reports
+  // 9. Create reports (skip if already exists by name)
   for (const r of REPORTS) {
     const clientId = r.clientName ? clientMap[r.clientName] : null
+
+    const exists = await prisma.report.findFirst({
+      where: { reportName: r.reportName },
+    })
+    if (exists) continue
 
     await prisma.report.create({
       data: {
@@ -1097,9 +1139,15 @@ async function main() {
   ]
 
   for (let i = 0; i < activities.length; i++) {
+    const a = activities[i]
+    const exists = await prisma.agentActivityLog.findFirst({
+      where: { agentName: a.agentName, activityType: a.activityType, actionTaken: a.actionTaken },
+    })
+    if (exists) continue
+
     await prisma.agentActivityLog.create({
       data: {
-        ...activities[i],
+        ...a,
         processingTimeMs: Math.floor(Math.random() * 5000) + 1000,
         createdAt: new Date(Date.now() - (activities.length - i) * 3600000),
       },
@@ -1680,6 +1728,11 @@ Rules:
   })
 
   for (const n of notificationSeeds) {
+    const exists = await prisma.notification.findFirst({
+      where: { title: n.title },
+    })
+    if (exists) continue
+
     const createdAt = new Date(Date.now() - n.daysAgo * 24 * 60 * 60 * 1000)
     await prisma.notification.create({
       data: {
@@ -2048,6 +2101,14 @@ Rules:
   ]
 
   for (const c of CONTACTS) {
+    const existing = await prisma.contact.findFirst({
+      where: { firstName: c.firstName, lastName: c.lastName },
+    })
+    if (existing) {
+      console.log(`  Contact (exists): ${c.firstName} ${c.lastName}`)
+      continue
+    }
+
     const contact = await prisma.contact.create({
       data: {
         firstName: c.firstName,

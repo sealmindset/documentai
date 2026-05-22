@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, Column } from '@/components/ui/data-table'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
+import { DocumentViewer } from '@/components/documents/document-viewer'
 import {
   FileText,
   Upload,
@@ -54,11 +54,39 @@ function formatFileSize(bytes: number | null): string {
   return `${(bytes / 1048576).toFixed(1)} MB`
 }
 
+interface OpenViewer {
+  id: string
+  documentId: string
+  position: { x: number; y: number }
+}
+
+let viewerCounter = 0
+
 export default function DocumentsPage() {
-  const router = useRouter()
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [openViewers, setOpenViewers] = useState<OpenViewer[]>([])
+  const [focusedViewer, setFocusedViewer] = useState<string | null>(null)
+
+  const openDocument = useCallback((documentId: string) => {
+    const existing = openViewers.find((v) => v.documentId === documentId)
+    if (existing) {
+      setFocusedViewer(existing.id)
+      return
+    }
+    const offset = openViewers.length * 30
+    const id = `viewer-${++viewerCounter}`
+    setOpenViewers((prev) => [
+      ...prev,
+      { id, documentId, position: { x: 200 + offset, y: 80 + offset } },
+    ])
+    setFocusedViewer(id)
+  }, [openViewers])
+
+  const closeViewer = useCallback((id: string) => {
+    setOpenViewers((prev) => prev.filter((v) => v.id !== id))
+  }, [])
 
   const fetchDocuments = () => {
     setLoading(true)
@@ -259,10 +287,22 @@ export default function DocumentsPage() {
             emptyIcon={<FileText className="h-12 w-12 text-gray-300 mb-3" />}
             emptyTitle="No documents yet"
             emptyDescription="Documents will appear here when uploaded or retrieved by DORA."
-            onRowClick={(row) => router.push(`/clients/${row.client.id}`)}
+            onRowClick={(row) => openDocument(row.id)}
           />
         </CardContent>
       </Card>
+
+      {/* Floating document viewer modals */}
+      {openViewers.map((viewer) => (
+        <DocumentViewer
+          key={viewer.id}
+          documentId={viewer.documentId}
+          initialPosition={viewer.position}
+          zIndex={focusedViewer === viewer.id ? 1000 : 900}
+          onFocus={() => setFocusedViewer(viewer.id)}
+          onClose={() => closeViewer(viewer.id)}
+        />
+      ))}
     </div>
   )
 }

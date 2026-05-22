@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { DocumentViewer } from '@/components/documents/document-viewer'
 import {
   ArrowLeft,
   Gavel,
@@ -145,6 +146,27 @@ export default function ClientDetailPage() {
   const [caseContacts, setCaseContacts] = useState<CaseContact[]>([])
   const [contactsLoading, setContactsLoading] = useState(true)
   const [expandedContact, setExpandedContact] = useState<string | null>(null)
+  const [openViewers, setOpenViewers] = useState<{ id: string; documentId: string; position: { x: number; y: number } }[]>([])
+  const [focusedViewer, setFocusedViewer] = useState<string | null>(null)
+
+  const openDocument = useCallback((documentId: string) => {
+    const existing = openViewers.find((v) => v.documentId === documentId)
+    if (existing) {
+      setFocusedViewer(existing.id)
+      return
+    }
+    const offset = openViewers.length * 30
+    const id = `viewer-${Date.now()}`
+    setOpenViewers((prev) => [
+      ...prev,
+      { id, documentId, position: { x: 200 + offset, y: 80 + offset } },
+    ])
+    setFocusedViewer(id)
+  }, [openViewers])
+
+  const closeViewer = useCallback((id: string) => {
+    setOpenViewers((prev) => prev.filter((v) => v.id !== id))
+  }, [])
 
   const fetchClient = async () => {
     try {
@@ -691,7 +713,7 @@ export default function ClientDetailPage() {
               </TableHeader>
               <TableBody>
                 {client.documents.map((doc) => (
-                  <TableRow key={doc.id}>
+                  <TableRow key={doc.id} className="cursor-pointer hover:bg-gray-50" onClick={() => openDocument(doc.id)}>
                     <TableCell className="font-medium">{doc.documentName}</TableCell>
                     <TableCell>{doc.documentType}</TableCell>
                     <TableCell>
@@ -712,6 +734,17 @@ export default function ClientDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {openViewers.map((viewer) => (
+        <DocumentViewer
+          key={viewer.id}
+          documentId={viewer.documentId}
+          initialPosition={viewer.position}
+          zIndex={focusedViewer === viewer.id ? 1000 : 900}
+          onFocus={() => setFocusedViewer(viewer.id)}
+          onClose={() => closeViewer(viewer.id)}
+        />
+      ))}
     </div>
   )
 }
