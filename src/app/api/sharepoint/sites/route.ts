@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import { listSites, isSharePointConfigured } from '@/lib/sharepoint-service'
 
-export async function GET() {
+export const GET = withRequestLog(async function GET() {
   const denied = await requirePermission('documents', 'create')
   if (denied) return denied
 
@@ -21,4 +22,4 @@ export async function GET() {
     console.error('[SharePoint] listSites error:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
-}
+})

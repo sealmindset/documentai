@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import { listLibraries } from '@/lib/sharepoint-service'
 
-export async function GET(request: NextRequest) {
+export const GET = withRequestLog(async function GET(request: NextRequest) {
   const denied = await requirePermission('documents', 'create')
   if (denied) return denied
 
@@ -19,4 +20,4 @@ export async function GET(request: NextRequest) {
     console.error('[SharePoint] listLibraries error:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
-}
+})

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import prisma from '@/lib/db'
 import { z } from 'zod'
@@ -17,7 +18,7 @@ const findingUpdateSchema = z.object({
   dueDate: z.string().optional(),
 })
 
-export async function GET(request: NextRequest) {
+export const GET = withRequestLog(async function GET(request: NextRequest) {
   const denied = await requirePermission('issues', 'view')
   if (denied) return denied
 
@@ -148,10 +149,10 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // Get findings summary/stats
-export async function HEAD(request: NextRequest) {
+export const HEAD = withRequestLog(async function HEAD(request: NextRequest) {
   try {
     const stats = await prisma.issue.groupBy({
       by: ['severity'],
@@ -166,4 +167,4 @@ export async function HEAD(request: NextRequest) {
   } catch (error) {
     return new NextResponse(null, { status: 500 })
   }
-}
+})

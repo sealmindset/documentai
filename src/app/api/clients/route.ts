@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { requirePermission } from '@/lib/auth'
 import { sanitizeStrings } from '@/lib/sanitize-input'
+import { withRequestLog } from '@/lib/request-logger'
 import { z } from 'zod'
 
 const clientSchema = z.object({
@@ -22,7 +23,7 @@ const clientSchema = z.object({
   annualSpend: z.number().optional(),
 })
 
-export async function GET(request: NextRequest) {
+export const GET = withRequestLog(async function GET(request: NextRequest) {
   const denied = await requirePermission('clients', 'view')
   if (denied) return denied
 
@@ -93,9 +94,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withRequestLog(async function POST(request: NextRequest) {
   const denied = await requirePermission('clients', 'create')
   if (denied) return denied
 
@@ -157,4 +158,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

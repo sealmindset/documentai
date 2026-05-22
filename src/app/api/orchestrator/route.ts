@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission, getCurrentUser } from '@/lib/auth'
 import { aiRateLimit } from '@/lib/ai/rate-limit'
 import { sanitizeAIError } from '@/lib/ai/errors'
@@ -28,7 +29,7 @@ const documentProcessSchema = z.object({
 })
 
 // Full client onboarding workflow
-export async function POST(request: NextRequest) {
+export const POST = withRequestLog(async function POST(request: NextRequest) {
   const denied = await requirePermission('agents', 'create')
   if (denied) return denied
 
@@ -83,10 +84,10 @@ export async function POST(request: NextRequest) {
       { status: safe.status }
     )
   }
-}
+})
 
 // Document processing workflow
-export async function PUT(request: NextRequest) {
+export const PUT = withRequestLog(async function PUT(request: NextRequest) {
   const denied = await requirePermission('agents', 'create')
   if (denied) return denied
 
@@ -137,10 +138,10 @@ export async function PUT(request: NextRequest) {
       { status: safe.status }
     )
   }
-}
+})
 
 // Maintenance cycle
-export async function PATCH() {
+export const PATCH = withRequestLog(async function PATCH() {
   const denied2 = await requirePermission('agents', 'create')
   if (denied2) return denied2
 
@@ -158,4 +159,4 @@ export async function PATCH() {
       { status: safe.status }
     )
   }
-}
+})

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import prisma from '@/lib/db'
 import { sanitizeStrings } from '@/lib/sanitize-input'
@@ -25,7 +26,7 @@ const documentSchema = z.object({
   expirationDate: z.string().max(30).optional(),
 })
 
-export async function GET(request: NextRequest) {
+export const GET = withRequestLog(async function GET(request: NextRequest) {
   const denied = await requirePermission('documents', 'view')
   if (denied) return denied
 
@@ -70,9 +71,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withRequestLog(async function POST(request: NextRequest) {
   const denied = await requirePermission('documents', 'create')
   if (denied) return denied
 
@@ -137,4 +138,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

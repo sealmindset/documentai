@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission, getCurrentUser } from '@/lib/auth'
 import { aiRateLimit } from '@/lib/ai/rate-limit'
 import { sanitizeAIError } from '@/lib/ai/errors'
@@ -17,7 +18,7 @@ const composeSchema = z.object({
   triggeredBy: z.enum(['MANUAL', 'SAGE_PIPELINE', 'SCHEDULED']).optional(),
 })
 
-export async function POST(request: NextRequest) {
+export const POST = withRequestLog(async function POST(request: NextRequest) {
   const denied = await requirePermission('emails', 'create')
   if (denied) return denied
 
@@ -55,9 +56,9 @@ export async function POST(request: NextRequest) {
     const safe = sanitizeAIError(error)
     return NextResponse.json({ error: safe.message }, { status: safe.status })
   }
-}
+})
 
-export async function GET(request: NextRequest) {
+export const GET = withRequestLog(async function GET(request: NextRequest) {
   const denied = await requirePermission('emails', 'view')
   if (denied) return denied
 
@@ -85,4 +86,4 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching emails:', error)
     return NextResponse.json({ error: 'Failed to fetch emails' }, { status: 500 })
   }
-}
+})

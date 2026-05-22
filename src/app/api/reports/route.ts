@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import prisma from '@/lib/db'
 
-export async function GET(request: NextRequest) {
+export const GET = withRequestLog(async function GET(request: NextRequest) {
   const denied = await requirePermission('reports', 'view')
   if (denied) return denied
 
@@ -33,4 +34,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

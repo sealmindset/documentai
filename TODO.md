@@ -8,7 +8,7 @@
 
 - [x] ~~**Testing: Add test suite** - Vitest (83 unit tests) + Playwright E2E (smoke tests). Run with `npm test` and `npm run test:e2e`~~
 - [ ] **Standards: Prompt Management upgrade** - Current Tier 2 Outdated (3 of 6 scaffold tables, 1 admin page, 0 scaffold components). Upgrade to Tier 2 Standard with card-based registry, guided editing, version history, safety indicators
-- [ ] **Standards: Wrap existing API routes with withRequestLog** - Activity log store exists but only logs when routes use the wrapper. Apply to high-traffic routes (clients, agents, orchestrator)
+- [x] ~~**Standards: Wrap existing API routes with withRequestLog** - 21 route files (55+ handlers) wrapped: clients, contacts, orchestrator, documents, emails, reports, issues, case-reviews, generate, sharepoint~~
 - [ ] **Standards: ESLint warnings cleanup** - 55 warnings (unused vars, any types, console.log). Non-blocking but should be cleaned up
 - [ ] **Onboarding: Add business criticality selection** - The onboarding wizard defaults to STANDARD business criticality; add a selector step for data types accessed, system integrations, PII/PHI/PCI flags, and criticality level
 - [x] **Naming: Full terminology normalization** - Renamed all TPRM terminology to legal-centric: Vendor→Client, RiskProfile→ClientProfile, RiskAssessment→CaseReview, RiskFinding→Issue, RemediationAction→ActionItem. DB migration, API routes, frontend, agents, tests all updated

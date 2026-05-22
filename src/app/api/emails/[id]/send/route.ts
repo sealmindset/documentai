@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import { echo } from '@/lib/agents'
 
-export async function POST(
+export const POST = withRequestLog(async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -29,4 +30,4 @@ export async function POST(
     console.error('Error sending email:', error)
     return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
   }
-}
+})

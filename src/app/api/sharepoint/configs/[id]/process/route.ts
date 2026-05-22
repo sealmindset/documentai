@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import prisma from '@/lib/db'
 import { processFile } from '@/lib/sharepoint-service'
 
-export async function POST(
+export const POST = withRequestLog(async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -71,4 +72,4 @@ export async function POST(
     console.error('[SharePoint] process error:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
-}
+})

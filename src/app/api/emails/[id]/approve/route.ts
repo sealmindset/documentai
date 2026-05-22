@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission, getCurrentUser } from '@/lib/auth'
 import prisma from '@/lib/db'
 
-export async function PUT(
+export const PUT = withRequestLog(async function PUT(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -50,4 +51,4 @@ export async function PUT(
     console.error('Error approving email:', error)
     return NextResponse.json({ error: 'Failed to approve email' }, { status: 500 })
   }
-}
+})

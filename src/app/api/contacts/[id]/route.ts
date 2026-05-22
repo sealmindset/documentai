@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import prisma from '@/lib/db'
 import { sanitizeStrings } from '@/lib/sanitize-input'
@@ -30,7 +31,7 @@ const updateContactSchema = z.object({
   emails: z.array(emailSchema).optional(),
 })
 
-export async function GET(
+export const GET = withRequestLog(async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -73,9 +74,9 @@ export async function GET(
       { status: 500 }
     )
   }
-}
+})
 
-export async function PUT(
+export const PUT = withRequestLog(async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -144,9 +145,9 @@ export async function PUT(
       { status: 500 }
     )
   }
-}
+})
 
-export async function DELETE(
+export const DELETE = withRequestLog(async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -171,4 +172,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+})

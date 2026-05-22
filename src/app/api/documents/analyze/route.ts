@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission, getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { chat } from '@/lib/ai/provider'
@@ -36,7 +37,7 @@ Format your response as JSON with the following structure:
   "recommendations": ["recommendation1", "recommendation2"]
 }`
 
-export async function POST(request: Request) {
+export const POST = withRequestLog(async function POST(request: Request) {
   const denied = await requirePermission('documents', 'edit')
   if (denied) return denied
 
@@ -174,4 +175,4 @@ export async function POST(request: Request) {
       { status: safe.status }
     )
   }
-}
+})

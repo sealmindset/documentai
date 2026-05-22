@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import prisma from '@/lib/db'
 
-export async function GET(
+export const GET = withRequestLog(async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -30,9 +31,9 @@ export async function GET(
     console.error('Error fetching email:', error)
     return NextResponse.json({ error: 'Failed to fetch email' }, { status: 500 })
   }
-}
+})
 
-export async function PUT(
+export const PUT = withRequestLog(async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -68,9 +69,9 @@ export async function PUT(
     console.error('Error updating email:', error)
     return NextResponse.json({ error: 'Failed to update email' }, { status: 500 })
   }
-}
+})
 
-export async function DELETE(
+export const DELETE = withRequestLog(async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -95,4 +96,4 @@ export async function DELETE(
     console.error('Error deleting email:', error)
     return NextResponse.json({ error: 'Failed to delete email' }, { status: 500 })
   }
-}
+})

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import prisma from '@/lib/db'
 import { z } from 'zod'
@@ -13,7 +14,7 @@ const createSchema = z.object({
   folderPath: z.string().max(1000).optional(),
 })
 
-export async function GET() {
+export const GET = withRequestLog(async function GET() {
   const denied = await requirePermission('documents', 'view')
   if (denied) return denied
 
@@ -42,9 +43,9 @@ export async function GET() {
     console.error('[SharePoint] list configs error:', error)
     return NextResponse.json({ error: 'Failed to fetch sync configurations' }, { status: 500 })
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withRequestLog(async function POST(request: NextRequest) {
   const denied = await requirePermission('documents', 'create')
   if (denied) return denied
 
@@ -73,4 +74,4 @@ export async function POST(request: NextRequest) {
     console.error('[SharePoint] create config error:', error)
     return NextResponse.json({ error: 'Failed to create sync configuration' }, { status: 500 })
   }
-}
+})

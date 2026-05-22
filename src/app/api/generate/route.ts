@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission, getCurrentUser } from '@/lib/auth'
 import { aiRateLimit } from '@/lib/ai/rate-limit'
 import { sanitizeAIError } from '@/lib/ai/errors'
@@ -12,7 +13,7 @@ const generateRequestSchema = z.object({
   outputFormat: z.enum(['DOCX', 'PDF', 'TXT']).optional(),
 })
 
-export async function POST(request: NextRequest) {
+export const POST = withRequestLog(async function POST(request: NextRequest) {
   const denied = await requirePermission('generated-documents', 'create')
   if (denied) return denied
 
@@ -50,9 +51,9 @@ export async function POST(request: NextRequest) {
     const safe = sanitizeAIError(error)
     return NextResponse.json({ error: safe.message }, { status: safe.status })
   }
-}
+})
 
-export async function GET(request: NextRequest) {
+export const GET = withRequestLog(async function GET(request: NextRequest) {
   const denied = await requirePermission('generated-documents', 'view')
   if (denied) return denied
 
@@ -70,4 +71,4 @@ export async function GET(request: NextRequest) {
     console.error('Error previewing merge fields:', error)
     return NextResponse.json({ error: 'Failed to load merge fields' }, { status: 500 })
   }
-}
+})

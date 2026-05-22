@@ -1,15 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { logStore } from './log-store'
 
-export function withRequestLog(
-  handler: (req: NextRequest, ctx?: { params: Promise<Record<string, string>> }) => Promise<NextResponse | Response>
-) {
-  return async (req: NextRequest, ctx?: { params: Promise<Record<string, string>> }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RouteHandler = (...args: any[]) => Promise<Response>
+
+export function withRequestLog<T extends RouteHandler>(handler: T): T {
+  return (async (...args: Parameters<T>) => {
+    const req = args[0] as NextRequest
     const start = Date.now()
     let status = 500
     let errorMsg: string | undefined
     try {
-      const response = await handler(req, ctx)
+      const response = await handler(...args)
       status = response.status
       return response
     } catch (err) {
@@ -27,7 +29,7 @@ export function withRequestLog(
         error: errorMsg,
       })
     }
-  }
+  }) as T
 }
 
 export function logOutbound(entry: {
