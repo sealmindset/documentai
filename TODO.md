@@ -19,7 +19,7 @@
 - [ ] **Dependencies: postcss vulnerability in Next.js** - 2 moderate advisories (GHSA-qx2v-qp2m-jg93) in postcss 8.4.31 bundled inside next.js. No fix until Next.js 16.3.0+ ships with postcss ≥8.5.10. Build-time CSS processor, low runtime risk
 - [ ] **Standards: Brain Layer** - AI memory system for persistent context across sessions. Nice-to-have enhancement
 - [ ] **Pre-commit hooks** - Install pre-commit tool: `pip install pre-commit && pre-commit install`
-- [ ] **Integration: SharePoint document pickup** - Automate document ingestion from SharePoint instead of manual upload. Connect to SharePoint API, watch configured document libraries, auto-trigger AURA extraction on new files
+- [x] ~~**Integration: SharePoint document pickup** - SharePoint integration via Graph API with configurable site/library connections, file sync tracking, AURA auto-extraction, and management UI~~
 
 ## Completed
 

@@ -2080,13 +2080,14 @@ Rules:
   console.log('Seeding firm settings...')
 
   const firmSettings = [
-    { key: 'firm.name', value: 'Vanmerven Law Firm', groupName: 'firm', displayName: 'Firm Name', description: 'Law firm name for document headers', valueType: 'string' },
+    { key: 'firm.name', value: 'Vanmeveren Law Firm', groupName: 'firm', displayName: 'Firm Name', description: 'Law firm name for document headers', valueType: 'string' },
     { key: 'firm.address', value: '123 Legal Way, Suite 400\nMinneapolis, MN 55401', groupName: 'firm', displayName: 'Firm Address', description: 'Firm mailing address for document headers', valueType: 'string' },
     { key: 'firm.phone', value: '(612) 555-0100', groupName: 'firm', displayName: 'Firm Phone', description: 'Main firm phone number', valueType: 'string' },
-    { key: 'firm.email', value: 'info@vanmervenlaw.com', groupName: 'firm', displayName: 'Firm Email', description: 'Main firm email', valueType: 'string' },
+    { key: 'firm.email', value: 'info@vanmeverenlawfirm.com', groupName: 'firm', displayName: 'Firm Email', description: 'Main firm email', valueType: 'string' },
     { key: 'firm.fax', value: '(612) 555-0101', groupName: 'firm', displayName: 'Firm Fax', description: 'Firm fax number', valueType: 'string' },
     { key: 'firm.attorney_name', value: 'James Vanmerven', groupName: 'firm', displayName: 'Primary Attorney', description: 'Default attorney name for document signatures', valueType: 'string' },
     { key: 'firm.bar_number', value: '0401234', groupName: 'firm', displayName: 'Bar Number', description: 'Attorney bar registration number', valueType: 'string' },
+    { key: 'email.auto_cc_firm', value: 'false', groupName: 'email', displayName: 'Auto-CC Firm Email', description: 'Automatically CC the firm email on outbound emails (requires a valid M365 mailbox)', valueType: 'boolean' },
   ]
 
   for (const setting of firmSettings) {

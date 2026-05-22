@@ -113,7 +113,7 @@ Rules:
       let bodyTemplate: string
 
       if (emailTemplate) {
-        subject = this.mergeText(emailTemplate.subject, context)
+        subject = this.cleanSubject(this.mergeText(emailTemplate.subject, context))
         bodyTemplate = this.mergeText(emailTemplate.body, context)
       } else {
         subject = `Re: ${client.name}${client.caseNumber ? ` — ${client.caseNumber}` : ''}`
@@ -133,7 +133,7 @@ Rules:
         attachmentRef = `\n\nPlease find attached: ${attachmentNames.join(', ')}.`
       }
 
-      const prompt = `Review and polish the following email for professional legal correspondence. Keep it concise and courteous.
+      const prompt = `Polish the following email for professional legal correspondence. Keep it concise and courteous.
 
 To: ${recipientName || recipientEmail}
 Subject: ${subject}
@@ -142,19 +142,25 @@ Subject: ${subject}
 ${bodyTemplate}${attachmentRef}
 --- END EMAIL ---
 
-Instructions:
-1. Keep ALL resolved data exactly as provided
-2. Replace any remaining {{...}} placeholders with [NEEDS INPUT: description]
-3. Ensure professional tone appropriate for legal correspondence
-4. If there are attachments referenced, make sure the body mentions them
-5. Return ONLY the polished email body text, no subject line, no commentary`
+STRICT RULES:
+1. Return ONLY the final email body text — nothing else
+2. Do NOT add commentary, review notes, flags, warnings, or suggestions
+3. Do NOT add lines starting with "Note", "Flag", "---", or asterisks after the signature
+4. Keep ALL names, phone numbers, email addresses, and addresses EXACTLY as provided — do not replace them with [NEEDS INPUT]
+5. Only use [NEEDS INPUT: description] for {{...}} placeholders that were NOT resolved
+6. The signature block must remain exactly as provided — do not alter phone, email, or address fields
+7. If there are attachments referenced, mention them in the body
+8. Do NOT include the subject line in your response`
 
       const polishedBody = await this.invoke(prompt)
 
       const ccEmails: string[] = []
-      const firmEmail = context.attorney['email']
-      if (firmEmail && firmEmail !== recipientEmail) {
-        ccEmails.push(firmEmail)
+      const autoCcEnabled = await this.isAutoCcEnabled()
+      if (autoCcEnabled) {
+        const firmEmail = context.attorney['email']
+        if (firmEmail && firmEmail !== recipientEmail) {
+          ccEmails.push(firmEmail)
+        }
       }
 
       const email = await prisma.outboundEmail.create({
@@ -367,6 +373,21 @@ Instructions:
       if (!section) return match
       return section[field] || match
     })
+  }
+
+  private cleanSubject(subject: string): string {
+    return subject
+      .replace(/\{\{[^}]+\}\}/g, '')
+      .replace(/\s*[—–-]\s*$/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+  }
+
+  private async isAutoCcEnabled(): Promise<boolean> {
+    const setting = await prisma.appSetting.findUnique({
+      where: { key: 'email.auto_cc_firm' },
+    })
+    return setting?.value === 'true'
   }
 
   private async getFirmSettings(): Promise<Record<string, string | null>> {

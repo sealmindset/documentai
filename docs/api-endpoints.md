@@ -163,6 +163,22 @@ See [Agent Workflows](agent-workflows.md) for detailed input/output contracts.
 
 ---
 
+## SharePoint Integration
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/sharepoint/sites` | `documents:create` | List available SharePoint sites |
+| GET | `/api/sharepoint/libraries?siteId=` | `documents:create` | List document libraries in a site |
+| GET | `/api/sharepoint/configs` | `documents:view` | List sync configurations |
+| POST | `/api/sharepoint/configs` | `documents:create` | Create a new sync connection |
+| GET | `/api/sharepoint/configs/:id` | `documents:view` | Get config details + tracked files |
+| PUT | `/api/sharepoint/configs/:id` | `documents:edit` | Update config (label, enabled, folder) |
+| DELETE | `/api/sharepoint/configs/:id` | `documents:delete` | Remove sync connection |
+| POST | `/api/sharepoint/configs/:id/sync` | `documents:create` | Trigger file sync from SharePoint |
+| POST | `/api/sharepoint/configs/:id/process` | `documents:create` | Process pending files through AURA |
+
+---
+
 ## Orchestrator
 
 All orchestrator routes require `agents:create` permission and are rate limited.

@@ -1,13 +1,11 @@
 /**
  * Email service — sends via Microsoft Graph API (Mail.Send).
  *
- * Uses the Entra app registration's client credentials to obtain an
- * access token, then sends mail via the Graph sendMail endpoint on
- * behalf of a configured sender mailbox.
- *
  * Required Entra app permission: Mail.Send (Application)
  * Required env vars: OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, M365_TENANT_ID, M365_SENDER_EMAIL
  */
+
+import { getGraphToken, extractTenantFromIssuer } from './graph-client'
 
 interface EmailRecipient {
   email: string
@@ -36,58 +34,6 @@ export interface SendEmailResult {
   success: boolean
   messageId?: string
   error?: string
-}
-
-let cachedToken: { token: string; expiresAt: number } | null = null
-
-async function getGraphToken(): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expiresAt - 60_000) {
-    return cachedToken.token
-  }
-
-  const tenantId = process.env.M365_TENANT_ID || extractTenantFromIssuer()
-  const clientId = process.env.OIDC_CLIENT_ID
-  const clientSecret = process.env.OIDC_CLIENT_SECRET
-
-  if (!tenantId || !clientId || !clientSecret) {
-    throw new Error(
-      'M365 email requires M365_TENANT_ID (or OIDC_ISSUER_URL), OIDC_CLIENT_ID, and OIDC_CLIENT_SECRET'
-    )
-  }
-
-  const res = await fetch(
-    `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: clientId,
-        client_secret: clientSecret,
-        scope: 'https://graph.microsoft.com/.default',
-      }),
-    }
-  )
-
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`Failed to obtain Graph token: ${res.status} ${body}`)
-  }
-
-  const data = await res.json()
-  cachedToken = {
-    token: data.access_token,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  }
-  return cachedToken.token
-}
-
-function extractTenantFromIssuer(): string | undefined {
-  const issuer = process.env.OIDC_ISSUER_URL || ''
-  const match = issuer.match(
-    /login\.microsoftonline\.com\/([0-9a-f-]{36})/i
-  )
-  return match?.[1]
 }
 
 function toGraphRecipient(r: EmailRecipient) {

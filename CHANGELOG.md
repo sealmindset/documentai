@@ -2,6 +2,23 @@
 
 All notable changes to Document AI Platform will be documented in this file.
 
+## [4.3.0] - 2026-05-21
+
+### Added
+- **Phase 3: SharePoint Document Pickup** — automatic document ingestion from SharePoint/OneDrive via Microsoft Graph API
+  - Shared Graph client (`graph-client.ts`) extracted from email service — reused by email and SharePoint
+  - SharePoint service: list sites, list libraries, list/download files, sync tracking, AURA processing
+  - Configurable sync connections: pick a SharePoint site, document library, and optional folder path
+  - File tracking with dedup (SharePoint item ID + last-modified check prevents re-downloading)
+  - Auto-processing: downloaded files run through AURA for extraction and classification, then linked to matching clients
+  - Management UI (`/sharepoint`): add connections, sync libraries, process pending files, view file status
+  - DB models: `sharepoint_syncs` (connection configs), `sharepoint_files` (tracked files with status)
+  - API routes: sites, libraries, configs CRUD, sync trigger, process trigger
+
+### Fixed
+- **ECHO CC bounce** — auto-CC firm email now controlled by `email.auto_cc_firm` setting (defaults off)
+- **Email subject placeholders** — unresolved `{{...}}` merge fields stripped from subject lines
+
 ## [4.0.0] - 2026-05-21
 
 ### Changed

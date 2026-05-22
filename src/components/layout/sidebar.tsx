@@ -23,6 +23,7 @@ import {
   FilePen,
   FileOutput,
   Mail,
+  CloudDownload,
 } from 'lucide-react'
 
 interface NavItem {
@@ -43,6 +44,7 @@ const navigation: NavItem[] = [
   { name: 'Generate', href: '/generate', icon: FilePen, permission: 'generated-documents.create' },
   { name: 'Generated Docs', href: '/generated-documents', icon: FileOutput, permission: 'generated-documents.view' },
   { name: 'Emails', href: '/emails', icon: Mail, permission: 'emails.view' },
+  { name: 'SharePoint', href: '/sharepoint', icon: CloudDownload, permission: 'documents.view' },
   { name: 'Reports', href: '/reports', icon: BarChart3, permission: 'reports.view' },
   { name: 'AI Agents', href: '/agents', icon: Bot, permission: 'agents.view' },
 ]

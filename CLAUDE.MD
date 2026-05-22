@@ -43,6 +43,7 @@ This project integrates AI capabilities with legal document management to stream
 
 Pipeline: LEXA → CLARA → DORA → ARIA → RITA → ATLAS
 Document Pipeline: SAGE → ECHO (generate document → draft courtesy email)
+Ingestion Pipeline: SharePoint → AURA (auto-download → extraction & classification)
 
 ## Data Model
 
@@ -59,6 +60,8 @@ Document Pipeline: SAGE → ECHO (generate document → draft courtesy email)
 | GeneratedDocument | `generated_documents` | SAGE-generated court documents |
 | OutboundEmail | `outbound_emails` | Attorney-approved outbound emails |
 | EmailTemplate | `email_templates` | Email templates for ECHO agent |
+| SharePointSync | `sharepoint_syncs` | SharePoint library sync configurations |
+| SharePointFile | `sharepoint_files` | Tracked files from SharePoint syncs |
 
 ## Project Structure
 
