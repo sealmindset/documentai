@@ -122,7 +122,7 @@ Provide a detailed case analysis in the following JSON format:
       const overallPercentage = Math.round((result.overallScore / 5) * 100)
 
       // Save case review to database
-      const caseReview = await prisma.caseReview.create({
+      await prisma.caseReview.create({
         data: {
           clientId: input.clientId,
           clientProfileId: input.clientProfileId,

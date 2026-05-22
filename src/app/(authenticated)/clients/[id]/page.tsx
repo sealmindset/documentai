@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/table'
 import {
   ArrowLeft,
-  Building2,
   Gavel,
   MapPin,
   Shield,
@@ -31,7 +30,6 @@ import {
   Phone,
   Mail,
   Plus,
-  X,
 } from 'lucide-react'
 
 interface ClientDetail {
@@ -141,20 +139,12 @@ const getStatusBadgeVariant = (status: string) => {
 
 export default function ClientDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const [client, setClient] = useState<ClientDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [runningAgent, setRunningAgent] = useState<string | null>(null)
   const [caseContacts, setCaseContacts] = useState<CaseContact[]>([])
   const [contactsLoading, setContactsLoading] = useState(true)
   const [expandedContact, setExpandedContact] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (params.id) {
-      fetchClient()
-      fetchContacts()
-    }
-  }, [params.id])
 
   const fetchClient = async () => {
     try {
@@ -182,6 +172,15 @@ export default function ClientDetailPage() {
       setContactsLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (params.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchClient()
+      fetchContacts()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id])
 
   const runLEXA = async () => {
     if (!client) return
@@ -486,7 +485,7 @@ export default function ClientDetailPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={(ROLE_BADGE_VARIANT[cc.role] || 'outline') as any}>
+                        <Badge variant={(ROLE_BADGE_VARIANT[cc.role] || 'outline') as BadgeProps['variant']}>
                           {ROLE_LABELS[cc.role] || cc.role}
                         </Badge>
                       </div>

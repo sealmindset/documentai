@@ -29,7 +29,6 @@ import {
   Play,
   CheckCircle,
   Clock,
-  AlertTriangle,
   XCircle,
   Loader2,
   Trash2,
@@ -135,6 +134,7 @@ export default function SharePointPage() {
     }
   }, [])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchConfigs() }, [fetchConfigs])
 
   const fetchFiles = useCallback(async (configId: string) => {
@@ -151,6 +151,7 @@ export default function SharePointPage() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (selectedConfig) fetchFiles(selectedConfig)
   }, [selectedConfig, fetchFiles])
 

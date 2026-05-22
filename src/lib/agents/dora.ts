@@ -275,7 +275,7 @@ Provide the response in the following JSON format:
     }
   }
 
-  private mapDocumentType(type: string): any {
+  private mapDocumentType(type: string): string {
     const typeMap: Record<string, string> = {
       'Police Report': 'POLICE_REPORT',
       'Arrest Record': 'ARREST_RECORD',

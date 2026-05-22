@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, Clock } from 'lucide-react'
@@ -60,7 +60,7 @@ export default function DeadlinesPage() {
       filterable: true,
       render: (row) => {
         const d = daysUntil(row.dueDate)
-        return <Badge variant={urgencyBadge(d) as any}>{d}d</Badge>
+        return <Badge variant={urgencyBadge(d) as BadgeProps['variant']}>{d}d</Badge>
       },
     },
     {

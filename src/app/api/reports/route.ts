@@ -13,7 +13,7 @@ export const GET = withRequestLog(async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const type = searchParams.get('type')
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     if (clientId) where.clientId = clientId
     if (status) where.status = status
     if (type) where.reportType = type

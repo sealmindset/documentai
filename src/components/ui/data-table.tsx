@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, type ReactNode } from 'react'
 import {
   Table,
   TableBody,
@@ -58,11 +58,11 @@ interface DataTableProps<T> {
 
 type SortDir = 'asc' | 'desc' | null
 
-function getNestedValue(obj: any, path: string): any {
-  return path.split('.').reduce((o, k) => o?.[k], obj)
+function getNestedValue(obj: object, path: string): unknown {
+  return path.split('.').reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], obj)
 }
 
-function resolveFilterValue<T>(row: T, col: Column<T>): string {
+function resolveFilterValue<T extends object>(row: T, col: Column<T>): string {
   if (col.filterValue) return col.filterValue(row as T)
   const val = getNestedValue(row, col.key)
   if (val == null) return ''
@@ -78,7 +78,7 @@ interface ColumnFilterProps<T> {
   onFilterChange: (key: string, values: Set<string> | null) => void
 }
 
-function ColumnFilter<T extends Record<string, any>>({
+function ColumnFilter<T extends object>({
   column,
   data,
   activeValues,
@@ -258,7 +258,7 @@ function ActiveFiltersBar<T>({
 
 // ── DataTable ────────────────────────────────────────────────────────────────
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends object>({
   columns,
   data,
   pageSize = 20,
@@ -466,13 +466,13 @@ export function DataTable<T extends Record<string, any>>({
               ) : (
                 paginated.map((row, i) => (
                   <TableRow
-                    key={(row as any).id || i}
+                    key={(row as Record<string, unknown>).id as string || i}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                     className={onRowClick ? 'cursor-pointer' : undefined}
                   >
                     {columns.map((col) => (
                       <TableCell key={col.key} className={col.className}>
-                        {col.render ? col.render(row) : getNestedValue(row, col.key)}
+                        {col.render ? col.render(row) : getNestedValue(row, col.key) as ReactNode}
                       </TableCell>
                     ))}
                   </TableRow>

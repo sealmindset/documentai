@@ -88,7 +88,7 @@ async function callAzureFoundry(
   // Resolve API key: explicit key first, then Entra ID fallback
   let apiKey = process.env.AZURE_AI_FOUNDRY_API_KEY
   if (!apiKey) {
-    console.info('[AI] No AZURE_AI_FOUNDRY_API_KEY set — falling back to DefaultAzureCredential')
+    console.warn('[AI] No AZURE_AI_FOUNDRY_API_KEY set — falling back to DefaultAzureCredential')
     const { DefaultAzureCredential } = await import('@azure/identity')
     const credential = new DefaultAzureCredential()
     const tokenResponse = await credential.getToken(

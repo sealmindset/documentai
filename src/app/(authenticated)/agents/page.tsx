@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
-  Bot,
   Play,
   CheckCircle2,
   Loader2,
@@ -134,7 +133,6 @@ const agents = [
 ]
 
 export default function AgentsPage() {
-  const [runningAgent, setRunningAgent] = useState<string | null>(null)
   const [runningMaintenance, setRunningMaintenance] = useState(false)
 
   const runMaintenance = async () => {

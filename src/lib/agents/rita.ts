@@ -116,7 +116,7 @@ Create a comprehensive report in the following JSON format:
         data: {
           clientId: input.clientId,
           caseReviewId: input.caseReviewId,
-          reportType: input.reportType as any,
+          reportType: input.reportType as string,
           reportName: result.reportName,
           generatedBy: 'RITA',
           content: result.content,

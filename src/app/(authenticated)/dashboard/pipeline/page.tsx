@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, Scale } from 'lucide-react'
@@ -49,7 +49,7 @@ export default function PipelinePage() {
     { key: 'name', header: 'Case', sortable: true, filterable: true },
     {
       key: 'status', header: 'Status', sortable: true, filterable: true,
-      render: (row) => <Badge variant={getStatusBadge(row.status) as any}>{row.status}</Badge>,
+      render: (row) => <Badge variant={getStatusBadge(row.status) as BadgeProps['variant']}>{row.status}</Badge>,
     },
     {
       key: 'industry', header: 'Type', sortable: true, filterable: true,
@@ -76,7 +76,7 @@ export default function PipelinePage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Scale className="h-6 w-6" /> Case Pipeline
-            {statusFilter && <Badge variant={getStatusBadge(statusFilter) as any} className="ml-2">{statusFilter}</Badge>}
+            {statusFilter && <Badge variant={getStatusBadge(statusFilter) as BadgeProps['variant']} className="ml-2">{statusFilter}</Badge>}
           </h1>
         </div>
       </div>

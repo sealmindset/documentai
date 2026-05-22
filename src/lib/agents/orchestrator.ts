@@ -14,7 +14,7 @@ import { aria, ARIAAgent } from './sara'
 import { rita, RITAAgent } from './rita'
 import { atlas, ATLASAgent } from './mars'
 import prisma from '@/lib/db'
-import type { AgentResult, ClientProfileInput, ClientProfileOutput } from './types'
+import type { ClientProfileInput } from './types'
 
 export interface WorkflowResult {
   clientId: string

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthorizationUrl } from '@/lib/oidc'
 import crypto from 'crypto'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Build the callback URL through the frontend (same-origin proxy)
     const frontendUrl =

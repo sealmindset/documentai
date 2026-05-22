@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FileStack, Plus } from 'lucide-react'
+import { FileStack } from 'lucide-react'
 
 interface Template {
   id: string

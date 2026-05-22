@@ -4,7 +4,7 @@ import JSZip from 'jszip'
 // Import pdf-parse/lib/pdf-parse directly to bypass index.js debug wrapper
 // that tries to Fs.readFileSync('./test/data/05-versions-space.pdf') --
 // a file that doesn't exist in Next.js standalone production builds.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const pdfParseLib = require('pdf-parse/lib/pdf-parse') as (
   buffer: Buffer,
   options?: Record<string, unknown>

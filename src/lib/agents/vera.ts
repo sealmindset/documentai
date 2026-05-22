@@ -138,7 +138,7 @@ Provide a review assessment in the following JSON format:
           hasPiiAccess: input.hasPiiAccess,
           hasPhiAccess: input.hasPhiAccess,
           hasPciAccess: input.hasPciAccess,
-          businessCriticality: input.businessCriticality as any,
+          businessCriticality: input.businessCriticality as string,
           assessmentFrequency: result.assessmentFrequency,
           nextAssessmentDate: result.nextAssessmentDate,
           calculatedBy: 'LEXA',

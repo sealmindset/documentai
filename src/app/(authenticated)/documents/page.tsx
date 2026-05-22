@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -69,6 +69,7 @@ export default function DocumentsPage() {
       .finally(() => setLoading(false))
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchDocuments() }, [])
 
   const total = documents.length
@@ -82,6 +83,7 @@ export default function DocumentsPage() {
       const thirtyDays = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       return exp <= thirtyDays && d.status !== 'EXPIRED'
     }).length
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setExpiring(count)
   }, [documents])
 

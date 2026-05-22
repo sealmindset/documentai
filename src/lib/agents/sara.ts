@@ -18,7 +18,6 @@ import type {
   AgentResult,
   SecurityAnalysisInput,
   SecurityAnalysisOutput,
-  SecurityFinding,
 } from './types'
 
 const ARIA_CONFIG: AgentConfig = {
@@ -124,7 +123,7 @@ Analyze this document and provide findings in the following JSON format:
             documentId: input.documentId,
             findingType: input.documentType,
             findingCategory: finding.category,
-            severity: finding.severity as any,
+            severity: finding.severity as string,
             title: finding.title,
             description: finding.description,
             snbrRiskMapping: finding.vlfRiskMapping,

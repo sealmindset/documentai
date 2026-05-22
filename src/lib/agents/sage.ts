@@ -172,8 +172,6 @@ Instructions:
 
     const judge = client.caseContacts.find(cc => cc.role === 'JUDGE')
     const prosecutor = client.caseContacts.find(cc => cc.role === 'PROSECUTOR')
-    const defenseCounsel = client.caseContacts.find(cc => cc.role === 'CO_COUNSEL')
-
     const firmSettings = await this.getFirmSettings()
 
     let charges: string[] = []

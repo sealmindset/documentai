@@ -263,7 +263,7 @@ export async function processFile(
     if (isImage) {
       textContent = content.toString('base64')
     } else if (mimeType === 'application/pdf') {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+       
       const pdfParse = require('pdf-parse/lib/pdf-parse') as (buf: Buffer) => Promise<{ text: string }>
       const parsed = await pdfParse(content)
       textContent = parsed.text

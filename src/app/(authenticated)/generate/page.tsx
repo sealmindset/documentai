@@ -62,7 +62,7 @@ export default function GeneratePage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [selectedClient, setSelectedClient] = useState<string>('')
   const [mergeFields, setMergeFields] = useState<MergeFields | null>(null)
-  const [overrides, setOverrides] = useState<Record<string, string>>({})
+  const overrides: Record<string, string> = {}
   const [generating, setGenerating] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [loadingFields, setLoadingFields] = useState(false)
@@ -121,7 +121,7 @@ export default function GeneratePage() {
       const data = await res.json()
       setResult(data)
       setStep('result')
-    } catch (error) {
+    } catch {
       setResult({ success: false, error: 'Failed to generate document' })
       setStep('result')
     } finally {

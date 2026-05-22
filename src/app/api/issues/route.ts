@@ -2,21 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withRequestLog } from '@/lib/request-logger'
 import { requirePermission } from '@/lib/auth'
 import prisma from '@/lib/db'
-import { z } from 'zod'
-
-const findingUpdateSchema = z.object({
-  status: z
-    .enum([
-      'OPEN',
-      'IN_REMEDIATION',
-      'PENDING_VERIFICATION',
-      'RESOLVED',
-      'ACCEPTED',
-      'CLOSED',
-    ])
-    .optional(),
-  dueDate: z.string().optional(),
-})
 
 export const GET = withRequestLog(async function GET(request: NextRequest) {
   const denied = await requirePermission('issues', 'view')
@@ -33,7 +18,7 @@ export const GET = withRequestLog(async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const includeAll = searchParams.get('includeAll') === 'true'
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
 
     // Client filter
     if (clientId) {
@@ -152,7 +137,7 @@ export const GET = withRequestLog(async function GET(request: NextRequest) {
 })
 
 // Get findings summary/stats
-export const HEAD = withRequestLog(async function HEAD(request: NextRequest) {
+export const HEAD = withRequestLog(async function HEAD(_request: NextRequest) {
   try {
     const stats = await prisma.issue.groupBy({
       by: ['severity'],
@@ -164,7 +149,7 @@ export const HEAD = withRequestLog(async function HEAD(request: NextRequest) {
     headers.set('X-Findings-Stats', JSON.stringify(stats))
 
     return new NextResponse(null, { status: 200, headers })
-  } catch (error) {
+  } catch {
     return new NextResponse(null, { status: 500 })
   }
 })

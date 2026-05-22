@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTable, type Column } from '@/components/ui/data-table'
@@ -15,7 +15,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import {
-  BookUser,
   Building2,
   Mail,
   MapPin,
@@ -71,11 +70,6 @@ interface Contact {
   _count?: { caseContacts: number }
 }
 
-const CONTACT_ROLES = [
-  'OPPOSING_COUNSEL', 'PROSECUTOR', 'CO_COUNSEL', 'WITNESS', 'EXPERT_WITNESS',
-  'JUDGE', 'COURT_CLERK', 'CLIENT', 'GUARDIAN_AD_LITEM', 'MEDIATOR', 'INSURANCE_ADJUSTER',
-]
-
 const PHONE_TYPES = ['BUSINESS', 'HOME', 'CELLULAR', 'FAX', 'COURT']
 const EMAIL_TYPES = ['BUSINESS', 'PERSONAL', 'COURT']
 
@@ -127,6 +121,7 @@ export default function ContactsPage() {
     finally { setLoading(false) }
   }, [])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchContacts() }, [fetchContacts])
 
   const fetchDetail = async (id: string) => {
@@ -213,14 +208,14 @@ export default function ContactsPage() {
 
   const addPhone = () => setForm((f) => ({ ...f, phones: [...f.phones, { phone: '', type: 'BUSINESS', isPrimary: false }] }))
   const removePhone = (i: number) => setForm((f) => ({ ...f, phones: f.phones.filter((_, j) => j !== i) }))
-  const updatePhone = (i: number, field: string, value: any) => setForm((f) => ({
+  const updatePhone = (i: number, field: string, value: string | boolean) => setForm((f) => ({
     ...f,
     phones: f.phones.map((p, j) => j === i ? { ...p, [field]: value } : field === 'isPrimary' && value ? { ...p, isPrimary: false } : p),
   }))
 
   const addEmail = () => setForm((f) => ({ ...f, emails: [...f.emails, { email: '', type: 'BUSINESS', isPrimary: false }] }))
   const removeEmail = (i: number) => setForm((f) => ({ ...f, emails: f.emails.filter((_, j) => j !== i) }))
-  const updateEmail = (i: number, field: string, value: any) => setForm((f) => ({
+  const updateEmail = (i: number, field: string, value: string | boolean) => setForm((f) => ({
     ...f,
     emails: f.emails.map((e, j) => j === i ? { ...e, [field]: value } : field === 'isPrimary' && value ? { ...e, isPrimary: false } : e),
   }))
@@ -485,8 +480,8 @@ export default function ContactsPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant={roleBadge(cc.role) as any} className="text-xs">{roleLabel(cc.role)}</Badge>
-                            <Badge variant={statusBadge(cc.client.status) as any} className="text-xs">{cc.client.status}</Badge>
+                            <Badge variant={roleBadge(cc.role) as BadgeProps['variant']} className="text-xs">{roleLabel(cc.role)}</Badge>
+                            <Badge variant={statusBadge(cc.client.status) as BadgeProps['variant']} className="text-xs">{cc.client.status}</Badge>
                           </div>
                         </Link>
                       ))}

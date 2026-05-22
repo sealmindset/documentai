@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, Gavel } from 'lucide-react'
@@ -59,7 +59,7 @@ export default function MotionsPage() {
         if (!row.expirationDate) return '—'
         const d = daysUntil(row.expirationDate)
         const variant = d <= 7 ? 'critical' : d <= 30 ? 'high' : 'medium'
-        return <Badge variant={variant as any}>{d}d</Badge>
+        return <Badge variant={variant as BadgeProps['variant']}>{d}d</Badge>
       },
     },
     {

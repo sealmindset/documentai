@@ -1,6 +1,6 @@
-import { complete, completeJSON } from '@/lib/ai/provider'
+import { complete } from '@/lib/ai/provider'
 import { getPrompt } from '@/lib/prompts'
-import { sanitizePromptInput, wrapUserInput, validatePromptSize } from '@/lib/ai/sanitize'
+import { wrapUserInput, validatePromptSize } from '@/lib/ai/sanitize'
 import { safeParseJSON, validateAgentOutput, type ValidationRule } from '@/lib/ai/validate'
 import { maskPII, unmaskPII, type PiiMapping } from '@/lib/ai/pii-masker'
 import { sanitizeAIError } from '@/lib/ai/errors'
@@ -36,7 +36,7 @@ export abstract class BaseAgent {
   }
 
   protected async invoke(userPrompt: string): Promise<string> {
-    console.log(`[${this.config.name}] Sending request (tier: ${this.config.tier})`)
+    console.warn(`[${this.config.name}] Sending request (tier: ${this.config.tier})`)
 
     // Sanitize and wrap user input
     const sanitizedPrompt = wrapUserInput(userPrompt)
@@ -68,7 +68,7 @@ export abstract class BaseAgent {
   }
 
   protected async invokeWithJSON<T>(userPrompt: string): Promise<T> {
-    console.log(`[${this.config.name}] Sending JSON request (tier: ${this.config.tier})`)
+    console.warn(`[${this.config.name}] Sending JSON request (tier: ${this.config.tier})`)
 
     // Sanitize and wrap user input
     const sanitizedPrompt = wrapUserInput(userPrompt)

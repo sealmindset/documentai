@@ -97,7 +97,7 @@ export const PUT = withRequestLog(async function PUT(
       return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
-    const updateData: any = { ...validated }
+    const updateData: Record<string, unknown> = { ...validated }
     if (validated.contractStartDate) {
       updateData.contractStartDate = new Date(validated.contractStartDate)
     }
@@ -116,8 +116,8 @@ export const PUT = withRequestLog(async function PUT(
         action: 'UPDATE',
         entityType: 'Client',
         entityId: client.id,
-        oldValues: existingClient as any,
-        newValues: validated as any,
+        oldValues: JSON.stringify(existingClient),
+        newValues: JSON.stringify(validated),
       },
     })
 

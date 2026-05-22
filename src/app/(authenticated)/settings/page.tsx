@@ -4,11 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/auth-context'
 import {
-  Settings,
   Shield,
   Bot,
   Database,
-  Globe,
   Bell,
 } from 'lucide-react'
 

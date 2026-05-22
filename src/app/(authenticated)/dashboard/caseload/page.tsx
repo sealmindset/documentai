@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, Users } from 'lucide-react'
@@ -53,7 +53,7 @@ export default function CaseloadPage() {
     },
     {
       key: 'status', header: 'Status', sortable: true, filterable: true,
-      render: (row) => <Badge variant={getStatusBadge(row.status) as any}>{row.status}</Badge>,
+      render: (row) => <Badge variant={getStatusBadge(row.status) as BadgeProps['variant']}>{row.status}</Badge>,
     },
     {
       key: 'annualSpend', header: 'Fees', sortable: true,

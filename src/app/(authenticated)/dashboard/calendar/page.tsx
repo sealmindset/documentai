@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { ArrowLeft, Calendar } from 'lucide-react'
@@ -65,13 +65,13 @@ export default function CalendarPage() {
       render: (row) => {
         const d = daysUntil(row.date)
         const variant = d <= 7 ? 'critical' : d <= 14 ? 'high' : 'medium'
-        return <Badge variant={variant as any}>{d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`}</Badge>
+        return <Badge variant={variant as BadgeProps['variant']}>{d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`}</Badge>
       },
     },
     {
       key: 'type', header: 'Event Type', sortable: true, filterable: true,
       filterValue: (row) => eventTypeLabel(row.type),
-      render: (row) => <Badge variant={eventTypeBadge(row.type) as any}>{eventTypeLabel(row.type)}</Badge>,
+      render: (row) => <Badge variant={eventTypeBadge(row.type) as BadgeProps['variant']}>{eventTypeLabel(row.type)}</Badge>,
     },
     { key: 'title', header: 'Title', sortable: true, filterable: true },
     { key: 'clientName', header: 'Case', sortable: true, filterable: true },

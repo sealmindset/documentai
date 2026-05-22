@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import {
   AlertTriangle,
   ArrowRight,
@@ -425,7 +425,7 @@ export default function DashboardPage() {
                       <div className="text-sm font-medium text-gray-900 truncate">{event.title}</div>
                       <div className="text-xs text-gray-500">{event.clientName}</div>
                     </div>
-                    <Badge variant={eventTypeBadge(event.type) as any} className="shrink-0 text-xs">
+                    <Badge variant={eventTypeBadge(event.type) as BadgeProps['variant']} className="shrink-0 text-xs">
                       {eventTypeLabel(event.type)}
                     </Badge>
                   </div>

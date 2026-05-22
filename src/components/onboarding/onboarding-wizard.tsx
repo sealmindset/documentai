@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/components/ui/use-toast'
 import {
   Upload,
@@ -120,11 +119,11 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
     primaryContactPhone: '', industry: '', website: '',
   })
   const [confidence, setConfidence] = useState<Record<string, number>>({})
-  const [dedupMatches, setDedupMatches] = useState<DedupMatchResult[]>([])
+  const [, setDedupMatches] = useState<DedupMatchResult[]>([])
   const [selectedMatch, setSelectedMatch] = useState<DedupMatchResult | null>(null)
   const [showDedupDialog, setShowDedupDialog] = useState(false)
-  const [action, setAction] = useState<'create_new' | 'use_existing' | 'reassess'>('create_new')
-  const [existingClientId, setExistingClientId] = useState<string | null>(null)
+  const [, setAction] = useState<'create_new' | 'use_existing' | 'reassess'>('create_new')
+  const [, setExistingClientId] = useState<string | null>(null)
   const [workflowStages, setWorkflowStages] = useState<WorkflowStage[]>([])
   const [pipelineRunning, setPipelineRunning] = useState(false)
   const [createdClientId, setCreatedClientId] = useState<string | null>(null)
