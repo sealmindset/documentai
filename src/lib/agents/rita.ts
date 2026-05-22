@@ -34,7 +34,7 @@ export class RITAAgent extends BaseAgent {
   }
 
   protected getDefaultSystemPrompt(): string {
-    return `You are RITA (Report Intelligence & Threat Assessment Agent), an AI specialist in generating case reports and litigation analytics for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+    return `You are RITA (Report Intelligence & Threat Assessment Agent), an AI specialist in generating case reports and litigation analytics for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to create comprehensive, actionable case reports for various audiences:
 

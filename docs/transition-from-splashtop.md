@@ -1,6 +1,6 @@
 # Transitioning from SplashTop to Document AI Platform
 
-**Vanmerven Law Firm — Operational Modernization**
+**Vanmeveren Law Firm — Operational Modernization**
 
 ---
 

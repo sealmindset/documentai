@@ -48,7 +48,7 @@ export class ATLASAgent extends BaseAgent {
   }
 
   protected getDefaultSystemPrompt(): string {
-    return `You are ATLAS (Action Tracking & Legal Advisory System Agent), an AI specialist in managing court deadlines and action items for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+    return `You are ATLAS (Action Tracking & Legal Advisory System Agent), an AI specialist in managing court deadlines and action items for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to:
 1. Create appropriate action plans for case deadlines and requirements

@@ -1,5 +1,5 @@
 # AI-Powered Legal Document Intelligence Platform
-## Vanmerven Law Firm (VLF)
+## Vanmeveren Law Firm (VLF)
 
 ---
 
@@ -998,4 +998,4 @@ document-ai-platform/
 *Document Version: 1.0*
 *Last Updated: January 2026*
 *Author: Document AI Development Team*
-*Organization: Vanmerven Law Firm (VLF)*
+*Organization: Vanmeveren Law Firm (VLF)*

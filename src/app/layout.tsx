@@ -3,7 +3,7 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 
 export const metadata: Metadata = {
-  title: 'Document AI Platform | Vanmerven Law Firm',
+  title: 'Document AI Platform | Vanmeveren Law Firm',
   description: 'AI-Powered Legal Document Intelligence Platform',
 }
 

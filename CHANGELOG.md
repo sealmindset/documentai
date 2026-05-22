@@ -70,7 +70,7 @@ All notable changes to Document AI Platform will be documented in this file.
 
 ### Changed
 - **BREAKING: Full rebrand from "AI TPRM Machine" to "Document AI Platform"**
-  - Organization: Sleep Number → Vanmerven Law Firm (VLF)
+  - Organization: Sleep Number → Vanmeveren Law Firm (VLF)
   - Purpose: Third Party Risk Management → Legal Document Intelligence
   - Users: InfoSec team → Legal team (in-house counsel, paralegals, legal ops)
 - **Agent rebrand**: VERA→LEXA, CARA→CLARA, SARA→ARIA, MARS→ATLAS (DORA, RITA, AURA unchanged)

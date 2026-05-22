@@ -55,7 +55,7 @@ function LoginContent() {
           </div>
           <CardTitle className="text-2xl">Document AI Platform</CardTitle>
           <CardDescription>
-            Legal Document Intelligence for Vanmerven Law Firm
+            Legal Document Intelligence for Vanmeveren Law Firm
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

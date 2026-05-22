@@ -2,10 +2,10 @@
   "project_name": "Document AI Platform",
   "project_type": "web-app",
   "active_tiers": [0, 1],
-  "purpose": "AI-powered Legal Document Intelligence platform for Vanmerven Law Firm, automating document reviews, compliance monitoring, and legal workflow management",
+  "purpose": "AI-powered Legal Document Intelligence platform for Vanmeveren Law Firm, automating document reviews, compliance monitoring, and legal workflow management",
   "users": {
-    "primary": "Legal team at Vanmerven Law Firm (in-house counsel, paralegals, legal ops)",
-    "roles": ["ADMIN", "ANALYST", "VIEWER", "VENDOR"]
+    "primary": "Legal team at Vanmeveren Law Firm (in-house counsel, paralegals, legal ops)",
+    "roles": ["ADMIN", "MANAGING_PARTNER", "ATTORNEY", "PARALEGAL"]
   },
   "stack": {
     "frontend": "Next.js 16",

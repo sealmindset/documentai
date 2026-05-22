@@ -27,9 +27,11 @@ services:
       - AI_MODEL_STANDARD=${AI_MODEL_STANDARD:-}
       - AI_MODEL_SIMPLE=${AI_MODEL_SIMPLE:-}
       - AZURE_AI_FOUNDRY_FALLBACK_MODEL=${AZURE_AI_FOUNDRY_FALLBACK_MODEL:-}
-      # M365 Email (Microsoft Graph)
+      # M365 (Microsoft Graph — email + calendar)
       - M365_TENANT_ID=${M365_TENANT_ID:-}
       - M365_SENDER_EMAIL=${M365_SENDER_EMAIL:-}
+      - M365_CALENDAR_SYNC_ENABLED=${M365_CALENDAR_SYNC_ENABLED:-false}
+      - M365_CALENDAR_USER_EMAIL=${M365_CALENDAR_USER_EMAIL:-}
       - DOCUMENTS_PATH=/app/data/documents
       - UPLOAD_CACHE_PATH=/app/data/uploads
     volumes:
@@ -37,9 +39,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      mock-oidc:
-        condition: service_healthy
-        required: false
     healthcheck:
       test: ["CMD", "node", "-e", "const http=require('http');http.get('http://127.0.0.1:3000',r=>{process.exit(r.statusCode<500?0:1)}).on('error',()=>process.exit(1))"]
       interval: 10s

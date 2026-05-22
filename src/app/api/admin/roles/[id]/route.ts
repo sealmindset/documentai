@@ -97,8 +97,8 @@ export async function DELETE(
     )
   }
 
-  // Reassign users to VIEWER role before deleting
-  const viewerRole = await prisma.role.findUnique({ where: { name: 'VIEWER' } })
+  // Reassign users to ATTORNEY role before deleting
+  const viewerRole = await prisma.role.findUnique({ where: { name: 'ATTORNEY' } })
   if (viewerRole) {
     await prisma.user.updateMany({
       where: { roleId: id },

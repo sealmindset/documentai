@@ -55,7 +55,7 @@ export class DORAAgent extends BaseAgent {
   }
 
   protected getDefaultSystemPrompt(): string {
-    return `You are DORA (Documentation & Outreach Retrieval Agent), an AI specialist in managing legal document collection for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+    return `You are DORA (Documentation & Outreach Retrieval Agent), an AI specialist in managing legal document collection for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to:
 1. Generate professional document request letters to courts, prosecutors, opposing counsel, and records custodians

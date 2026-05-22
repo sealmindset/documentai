@@ -15,7 +15,7 @@ import { extractContent } from '@/lib/documents/extract-text'
 // Force dynamic to prevent static generation issues with pdf-parse
 export const dynamic = 'force-dynamic'
 
-const ANALYSIS_PROMPT = `You are an expert legal document analyst for Vanmerven Law Firm.
+const ANALYSIS_PROMPT = `You are an expert legal document analyst for Vanmeveren Law Firm.
 Analyze the provided document and extract:
 1. Key compliance controls and certifications
 2. Issues and gaps identified

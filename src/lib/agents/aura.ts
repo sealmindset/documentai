@@ -211,7 +211,7 @@ export class AURAAgent extends BaseAgent {
 
       const response = await chat(
         [
-          { role: 'system', content: SAFETY_PREAMBLE + 'You are a document comparison expert for Vanmerven Law Firm\'s criminal defense and civil litigation practice.' },
+          { role: 'system', content: SAFETY_PREAMBLE + 'You are a document comparison expert for Vanmeveren Law Firm\'s criminal defense and civil litigation practice.' },
           { role: 'user', content: maskedText },
         ],
         { temperature: 0.2, maxTokens: 500, tier: 'simple' }

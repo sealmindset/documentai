@@ -15,17 +15,16 @@ until node -e "const net = require('net'); const s = net.createConnection({host:
 done
 echo "Database is ready."
 
-# ── Wait for mock-oidc if in dev mode ──
-if [ -n "$OIDC_ISSUER_URL" ]; then
-  # Extract host:port from OIDC_ISSUER_URL for internal health check
+# ── Wait for mock-oidc only if using a local provider ──
+if echo "$OIDC_ISSUER_URL" | grep -q "mock-oidc\|localhost\|127\.0\.0\.1"; then
   OIDC_HOST=$(echo "$OIDC_ISSUER_URL" | sed 's|http://||' | sed 's|/.*||')
-  echo "Checking OIDC provider at ${OIDC_HOST}..."
+  echo "Checking local OIDC provider at ${OIDC_HOST}..."
   OIDC_RETRIES=0
   OIDC_MAX_RETRIES=30
   while ! node -e "const http=require('http');http.get('http://${OIDC_HOST}/health',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1));" 2>/dev/null; do
     OIDC_RETRIES=$((OIDC_RETRIES + 1))
     if [ "$OIDC_RETRIES" -ge "$OIDC_MAX_RETRIES" ]; then
-      echo "WARNING: OIDC provider not available after ${OIDC_MAX_RETRIES}s. Login may not work."
+      echo "WARNING: Local OIDC provider not available after ${OIDC_MAX_RETRIES}s."
       break
     fi
     sleep 1
@@ -33,6 +32,8 @@ if [ -n "$OIDC_ISSUER_URL" ]; then
   if [ "$OIDC_RETRIES" -lt "$OIDC_MAX_RETRIES" ]; then
     echo "OIDC provider is ready."
   fi
+else
+  echo "Using external OIDC provider: ${OIDC_ISSUER_URL}"
 fi
 
 # ── Apply database schema ──

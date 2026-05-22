@@ -21,6 +21,7 @@ const APP_RESOURCES = [
   'generated-documents',
   'emails',
   'brain',
+  'calendar',
 ]
 
 const SYSTEM_RESOURCES = ['users', 'roles', 'logs']
@@ -44,27 +45,28 @@ const SYSTEM_ROLES: RoleDef[] = [
     permissions: () => true,
   },
   {
-    name: 'ANALYST',
-    description: 'Can manage clients, case reviews, issues, and reports',
+    name: 'MANAGING_PARTNER',
+    description: 'Full case management, reviews, reports, and firm oversight',
     permissions: (resource) => {
       if (['users', 'roles', 'prompts', 'logs'].includes(resource)) return false
       return true
     },
   },
   {
-    name: 'VIEWER',
-    description: 'Read-only access to dashboards and reports',
-    permissions: (_resource, action) => {
-      if (['users', 'roles', 'prompts', 'logs'].includes(_resource)) return false
-      return action === 'view'
+    name: 'ATTORNEY',
+    description: 'Case work, document management, contacts, and calendar',
+    permissions: (resource, action) => {
+      if (['users', 'roles', 'prompts', 'logs'].includes(resource)) return false
+      if (['settings'].includes(resource)) return action === 'view'
+      return true
     },
   },
   {
-    name: 'VENDOR',
-    description: 'Limited access for client portal',
+    name: 'PARALEGAL',
+    description: 'Document support, case viewing, and calendar access',
     permissions: (resource, action) => {
-      if (['dashboard', 'documents'].includes(resource)) return true
-      if (['clients', 'case-reviews', 'issues'].includes(resource))
+      if (['dashboard', 'documents', 'calendar', 'contacts'].includes(resource)) return true
+      if (['clients', 'case-reviews', 'issues', 'reports'].includes(resource))
         return action === 'view'
       return false
     },
@@ -77,32 +79,32 @@ const SYSTEM_ROLES: RoleDef[] = [
 
 const SEED_USERS = [
   {
-    email: 'admin@example.com',
-    name: 'Alex Admin',
-    oidcSubject: 'mock-admin',
+    email: 'rob@vanmeverenlawfirm.com',
+    name: 'Rob Vance',
+    oidcSubject: null,
     roleName: 'ADMIN',
     department: 'Firm Administration',
   },
   {
-    email: 'analyst@example.com',
-    name: 'Sam Analyst',
-    oidcSubject: 'mock-analyst',
-    roleName: 'ANALYST',
-    department: 'Case Analysis',
+    email: 'brian@vanmeverenlawfirm.com',
+    name: 'Brian Vanmeveren',
+    oidcSubject: null,
+    roleName: 'MANAGING_PARTNER',
+    department: 'Managing Partner',
   },
   {
-    email: 'user@example.com',
-    name: 'Val Viewer',
-    oidcSubject: 'mock-user',
-    roleName: 'VIEWER',
-    department: 'Legal Support',
+    email: 'emily@vanmeverenlawfirm.com',
+    name: 'Emily Crabtree',
+    oidcSubject: null,
+    roleName: 'ATTORNEY',
+    department: 'Criminal Defense',
   },
   {
-    email: 'vendor@example.com',
-    name: 'Vic Vendor',
-    oidcSubject: 'mock-vendor',
-    roleName: 'VENDOR',
-    department: 'External',
+    email: 'debbie@vanmeverenlawfirm.com',
+    name: 'Debbie Sampson',
+    oidcSubject: null,
+    roleName: 'PARALEGAL',
+    department: 'Paralegal Support',
   },
 ]
 
@@ -153,8 +155,8 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'ADA Rebecca Stohl',
     primaryContactEmail: 'rstohl@hennepin.courts.mn.gov',
     primaryContactPhone: '612-555-0201',
-    businessOwner: 'Atty. James Vanmerven',
-    itOwner: 'Atty. Sarah Chen',
+    businessOwner: 'Atty. Emily Crabtree',
+    itOwner: 'Atty. Emily Crabtree',
     annualSpend: 35000,
     status: 'ACTIVE',
     caseNumber: '27-CR-26-1847',
@@ -183,8 +185,8 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'ADA Kevin Marsh',
     primaryContactEmail: 'kmarsh@ramsey.courts.mn.gov',
     primaryContactPhone: '651-555-0312',
-    businessOwner: 'Atty. James Vanmerven',
-    itOwner: 'Atty. David Park',
+    businessOwner: 'Atty. Emily Crabtree',
+    itOwner: 'Atty. Emily Crabtree',
     annualSpend: 28000,
     status: 'ACTIVE',
     caseNumber: '62-CR-26-0934',
@@ -213,8 +215,8 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'ADA Priya Sharma',
     primaryContactEmail: 'psharma@hennepin.courts.mn.gov',
     primaryContactPhone: '612-555-0415',
-    businessOwner: 'Atty. Laura Vanmerven',
-    itOwner: 'Atty. Michael Torres',
+    businessOwner: 'Atty. Brian Vanmeveren',
+    itOwner: 'Debbie Sampson, Paralegal',
     annualSpend: 52000,
     status: 'ACTIVE',
     caseNumber: '27-CR-25-4281',
@@ -243,8 +245,8 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'ADA Thomas Nguyen',
     primaryContactEmail: 'tnguyen@hennepin.courts.mn.gov',
     primaryContactPhone: '612-555-0528',
-    businessOwner: 'Atty. James Vanmerven',
-    itOwner: 'Atty. Sarah Chen',
+    businessOwner: 'Atty. Emily Crabtree',
+    itOwner: 'Atty. Emily Crabtree',
     annualSpend: 45000,
     status: 'ACTIVE',
     caseNumber: '27-CR-26-2103',
@@ -273,7 +275,7 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'Atty. Diane Kowalski',
     primaryContactEmail: 'dkowalski@kowalskifamilylaw.com',
     primaryContactPhone: '651-555-0634',
-    businessOwner: 'Atty. Laura Vanmerven',
+    businessOwner: 'Atty. Brian Vanmeveren',
     itOwner: 'Paralegal Maria Santos',
     annualSpend: 18000,
     status: 'ACTIVE',
@@ -289,7 +291,7 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'Atty. Robert Haines',
     primaryContactEmail: 'rhaines@hainesdefense.com',
     primaryContactPhone: '612-555-0747',
-    businessOwner: 'Atty. David Park',
+    businessOwner: 'Atty. Emily Crabtree',
     itOwner: 'Paralegal Jason Lee',
     annualSpend: 12000,
     status: 'ASSIGNED',
@@ -305,7 +307,7 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'Atty. Patricia Owens (co-counsel)',
     primaryContactEmail: 'powens@owensestate.com',
     primaryContactPhone: '651-555-0853',
-    businessOwner: 'Atty. Laura Vanmerven',
+    businessOwner: 'Atty. Brian Vanmeveren',
     itOwner: 'Paralegal Maria Santos',
     annualSpend: 15000,
     status: 'NEW',
@@ -321,8 +323,8 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'ADA Patricia Holloway',
     primaryContactEmail: 'p.holloway@hennepin.courts.mn.gov',
     primaryContactPhone: '612-555-0961',
-    businessOwner: 'Atty. James Vanmerven',
-    itOwner: 'Atty. Sarah Chen',
+    businessOwner: 'Atty. Emily Crabtree',
+    itOwner: 'Atty. Emily Crabtree',
     annualSpend: 22000,
     status: 'ACCEPTED',
   },
@@ -337,7 +339,7 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'AAG Robert Finch',
     primaryContactEmail: 'r.finch@ag.state.mn.us',
     primaryContactPhone: '651-555-0301',
-    businessOwner: 'Atty. David Park',
+    businessOwner: 'Atty. Emily Crabtree',
     itOwner: 'Paralegal Jason Lee',
     annualSpend: 30000,
     status: 'NEW',
@@ -353,8 +355,8 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'ADA Kevin Marsh',
     primaryContactEmail: 'k.marsh@ramsey.courts.mn.gov',
     primaryContactPhone: '651-555-0401',
-    businessOwner: 'Atty. Laura Vanmerven',
-    itOwner: 'Atty. Michael Torres',
+    businessOwner: 'Atty. Brian Vanmeveren',
+    itOwner: 'Debbie Sampson, Paralegal',
     annualSpend: 38000,
     status: 'ASSIGNED',
   },
@@ -369,7 +371,7 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'Atty. Nancy Whitfield',
     primaryContactEmail: 'n.whitfield@whitfieldbrandt.com',
     primaryContactPhone: '952-555-0501',
-    businessOwner: 'Atty. Laura Vanmerven',
+    businessOwner: 'Atty. Brian Vanmeveren',
     itOwner: 'Paralegal Maria Santos',
     annualSpend: 14000,
     status: 'CLOSED',
@@ -385,8 +387,8 @@ const CLIENTS: ClientSeed[] = [
     primaryContactName: 'ADA Monica Reeves',
     primaryContactEmail: 'm.reeves@dakota.courts.mn.gov',
     primaryContactPhone: '651-555-0601',
-    businessOwner: 'Atty. James Vanmerven',
-    itOwner: 'Atty. David Park',
+    businessOwner: 'Atty. Emily Crabtree',
+    itOwner: 'Atty. Emily Crabtree',
     annualSpend: 20000,
     status: 'CLOSED',
   },
@@ -1067,11 +1069,11 @@ async function main() {
 
   // 8b. Create action items
   const actionItemSeeds = [
-    { issueTitle: 'Breathalyzer calibration expired at time of arrest', clientName: 'State v. Marcus Thompson', title: 'File motion to suppress breathalyzer results', actionType: 'REMEDIATE', priority: 'CRITICAL', status: 'IN_PROGRESS', dueDays: 10, assignedTo: 'Atty. James Vanmerven', ownerType: 'INTERNAL' },
-    { issueTitle: 'Search warrant scope potentially exceeded', clientName: 'State v. Roberto Alvarez', title: 'Draft suppression motion for garage search', actionType: 'REMEDIATE', priority: 'CRITICAL', status: 'OPEN', dueDays: 14, assignedTo: 'Atty. James Vanmerven', ownerType: 'INTERNAL' },
+    { issueTitle: 'Breathalyzer calibration expired at time of arrest', clientName: 'State v. Marcus Thompson', title: 'File motion to suppress breathalyzer results', actionType: 'REMEDIATE', priority: 'CRITICAL', status: 'IN_PROGRESS', dueDays: 10, assignedTo: 'Atty. Emily Crabtree', ownerType: 'INTERNAL' },
+    { issueTitle: 'Search warrant scope potentially exceeded', clientName: 'State v. Roberto Alvarez', title: 'Draft suppression motion for garage search', actionType: 'REMEDIATE', priority: 'CRITICAL', status: 'OPEN', dueDays: 14, assignedTo: 'Atty. Emily Crabtree', ownerType: 'INTERNAL' },
     { issueTitle: 'Medical records release incomplete', clientName: 'Chen v. Apex Properties LLC', title: 'Send supplemental records request to PT department', actionType: 'REMEDIATE', priority: 'MEDIUM', status: 'IN_PROGRESS', dueDays: 25, assignedTo: 'Paralegal Jason Lee', ownerType: 'INTERNAL' },
     { issueTitle: 'Home study report incomplete for father\'s residence', clientName: 'Martinez v. Martinez', title: 'Schedule follow-up home study visit', actionType: 'REMEDIATE', priority: 'MEDIUM', status: 'OPEN', dueDays: 28, assignedTo: 'Paralegal Maria Santos', ownerType: 'INTERNAL' },
-    { issueTitle: 'Statute of limitations approaching on 3 counts', clientName: 'State v. Karen Mitchell', title: 'File motion to dismiss time-barred counts', actionType: 'REMEDIATE', priority: 'HIGH', status: 'IN_PROGRESS', dueDays: 7, assignedTo: 'Atty. Laura Vanmerven', ownerType: 'INTERNAL' },
+    { issueTitle: 'Statute of limitations approaching on 3 counts', clientName: 'State v. Karen Mitchell', title: 'File motion to dismiss time-barred counts', actionType: 'REMEDIATE', priority: 'HIGH', status: 'IN_PROGRESS', dueDays: 7, assignedTo: 'Atty. Brian Vanmeveren', ownerType: 'INTERNAL' },
   ]
 
   for (const ai of actionItemSeeds) {
@@ -1171,7 +1173,7 @@ async function main() {
       model: 'standard',
       temperature: 0.3,
       maxTokens: 2000,
-      content: `You are LEXA (Legal Examination & Assessment Agent), an AI specialist in case intake and priority assessment for Vanmerven Law Firm (VLF).
+      content: `You are LEXA (Legal Examination & Assessment Agent), an AI specialist in case intake and priority assessment for Vanmeveren Law Firm (VLF).
 
 Your role is to analyze new case intake information and determine the case priority tier based on:
 1. Charge severity — Nature and classification of charges (felony, gross misdemeanor, misdemeanor) or civil claim value
@@ -1211,7 +1213,7 @@ Always provide specific, actionable recommendations for case management and reso
       model: 'complex',
       temperature: 0.3,
       maxTokens: 3000,
-      content: `You are CLARA (Comprehensive Legal Analysis & Review Agent), an AI specialist in conducting detailed case reviews for Vanmerven Law Firm (VLF).
+      content: `You are CLARA (Comprehensive Legal Analysis & Review Agent), an AI specialist in conducting detailed case reviews for Vanmeveren Law Firm (VLF).
 
 Your role is to perform comprehensive case strength analysis across multiple dimensions:
 
@@ -1278,7 +1280,7 @@ Provide detailed, actionable case assessments with specific strategic recommenda
       model: 'simple',
       temperature: 0.2,
       maxTokens: 2000,
-      content: `You are DORA (Documentation & Outreach Retrieval Agent), an AI specialist in managing legal document collection for Vanmerven Law Firm (VLF).
+      content: `You are DORA (Documentation & Outreach Retrieval Agent), an AI specialist in managing legal document collection for Vanmeveren Law Firm (VLF).
 
 Your role is to:
 1. Generate professional document request letters to courts, prosecutors, opposing counsel, and third parties
@@ -1354,7 +1356,7 @@ Always be professional and precise in document request communications. Include c
       model: 'complex',
       temperature: 0.2,
       maxTokens: 4000,
-      content: `You are ARIA (Automated Review, Identification & Analysis Agent), an AI specialist in analyzing legal documents and identifying case-relevant issues for Vanmerven Law Firm (VLF).
+      content: `You are ARIA (Automated Review, Identification & Analysis Agent), an AI specialist in analyzing legal documents and identifying case-relevant issues for Vanmeveren Law Firm (VLF).
 
 Your role is to:
 1. Analyze legal documents (police reports, court filings, discovery materials, expert reports, financial records)
@@ -1400,7 +1402,7 @@ Provide specific, actionable issues with clear strategic recommendations for the
       model: 'standard',
       temperature: 0.3,
       maxTokens: 4000,
-      content: `You are RITA (Report Intelligence & Threat Assessment Agent), an AI specialist in generating legal case reports for Vanmerven Law Firm (VLF).
+      content: `You are RITA (Report Intelligence & Threat Assessment Agent), an AI specialist in generating legal case reports for Vanmeveren Law Firm (VLF).
 
 Your role is to create comprehensive, actionable reports for various audiences:
 
@@ -1465,7 +1467,7 @@ Always structure reports for maximum clarity and actionability.`,
       model: 'standard',
       temperature: 0.3,
       maxTokens: 3000,
-      content: `You are ATLAS (Action Tracking & Legal Advisory System Agent), an AI specialist in managing legal action items and court deadlines for Vanmerven Law Firm (VLF).
+      content: `You are ATLAS (Action Tracking & Legal Advisory System Agent), an AI specialist in managing legal action items and court deadlines for Vanmeveren Law Firm (VLF).
 
 Your role is to:
 1. Track court deadlines, filing requirements, and hearing preparation tasks
@@ -1516,7 +1518,7 @@ Always be precise with dates and deadlines. Document everything thoroughly. Miss
       model: 'standard',
       temperature: 0.3,
       maxTokens: 4096,
-      content: `You are AURA (Automated Upload & Recognition Agent), an AI specialist in extracting case information from uploaded legal documents for Vanmerven Law Firm (VLF).
+      content: `You are AURA (Automated Upload & Recognition Agent), an AI specialist in extracting case information from uploaded legal documents for Vanmeveren Law Firm (VLF).
 
 Your role is to extract key information from legal documents including police reports, court filings, witness statements, expert reports, financial records, medical records, and estate documents.
 
@@ -1619,7 +1621,7 @@ Definitions:
       model: 'standard',
       temperature: 0.2,
       maxTokens: 4000,
-      content: `You are SAGE (Structured Assembly & Generation Engine), a legal document generation specialist for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+      content: `You are SAGE (Structured Assembly & Generation Engine), a legal document generation specialist for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to take document templates with merge fields and produce polished, court-ready legal documents. You:
 
@@ -1699,7 +1701,7 @@ Rules:
     },
     {
       recipientType: 'INTERNAL',
-      recipientId: userMap['ANALYST'] || null,
+      recipientId: userMap['MANAGING_PARTNER'] || null,
       notificationType: 'DOCUMENT_REQUEST',
       title: 'Discovery Request Sent: Mitchell employment records from Northland Credit Union',
       message: 'DORA has sent a subpoena duces tecum to Northland Credit Union for Karen Mitchell\'s complete employment file, including performance reviews, access logs, and internal investigation records. Response deadline: 14 business days. Follow up if not received by the deadline — these records are critical to establishing Mitchell\'s access level and the scope of alleged embezzlement.',
@@ -2147,7 +2149,7 @@ Rules:
     { key: 'firm.phone', value: '(612) 555-0100', groupName: 'firm', displayName: 'Firm Phone', description: 'Main firm phone number', valueType: 'string' },
     { key: 'firm.email', value: 'info@vanmeverenlawfirm.com', groupName: 'firm', displayName: 'Firm Email', description: 'Main firm email', valueType: 'string' },
     { key: 'firm.fax', value: '(612) 555-0101', groupName: 'firm', displayName: 'Firm Fax', description: 'Firm fax number', valueType: 'string' },
-    { key: 'firm.attorney_name', value: 'James Vanmerven', groupName: 'firm', displayName: 'Primary Attorney', description: 'Default attorney name for document signatures', valueType: 'string' },
+    { key: 'firm.attorney_name', value: 'Brian Vanmeveren', groupName: 'firm', displayName: 'Primary Attorney', description: 'Default attorney name for document signatures', valueType: 'string' },
     { key: 'firm.bar_number', value: '0401234', groupName: 'firm', displayName: 'Bar Number', description: 'Attorney bar registration number', valueType: 'string' },
     { key: 'email.auto_cc_firm', value: 'false', groupName: 'email', displayName: 'Auto-CC Firm Email', description: 'Automatically CC the firm email on outbound emails (requires a valid M365 mailbox)', valueType: 'boolean' },
     { key: 'brain.enabled', value: 'true', groupName: 'AI Configuration', displayName: 'Brain Layer Enabled', description: 'Enable AI memory system for persistent context across agent sessions', valueType: 'boolean' },
@@ -2518,6 +2520,78 @@ Please let me know if you have any questions or would like to discuss further.
     }
   }
   console.log(`  ${emailTemplates.length} email templates`)
+
+  // ============================================
+  // CALENDAR EVENTS
+  // ============================================
+
+  console.log('Seeding calendar events...')
+
+  const calendarClients = await prisma.client.findMany({ select: { id: true, name: true } })
+  const findClient = (name: string) => calendarClients.find((c) => c.name.includes(name))
+
+  const now = new Date()
+  const d = (daysFromNow: number, hours = 9, minutes = 0) => {
+    const dt = new Date(now)
+    dt.setDate(dt.getDate() + daysFromNow)
+    dt.setHours(hours, minutes, 0, 0)
+    return dt
+  }
+
+  const calendarEvents = [
+    // Past events
+    { title: 'Arraignment — State v. Angela Foster', eventType: 'COURT_DATE', startAt: d(-45, 10, 0), endAt: d(-45, 10, 30), location: 'Ramsey County — 2nd Judicial District Court, St. Paul', courtroom: 'Courtroom 1450', judge: 'Hon. Patricia Simmons', clientName: 'Angela Foster', status: 'COMPLETED' },
+    { title: 'Initial consultation — Banks Estate', eventType: 'CLIENT_MEETING', startAt: d(-30, 14, 0), endAt: d(-30, 15, 0), location: 'VLF Office', clientName: 'Banks Estate', status: 'COMPLETED' },
+    { title: 'Omnibus hearing — State v. Tyrone Jackson', eventType: 'COURT_DATE', startAt: d(-21, 9, 0), endAt: d(-21, 10, 0), location: 'Hennepin County — 4th Judicial District Court, Minneapolis', courtroom: 'Courtroom 859', judge: 'Hon. Richard Abrams', clientName: 'Tyrone Jackson', status: 'COMPLETED' },
+    { title: 'Discovery deadline — State v. Roberto Alvarez', eventType: 'DEADLINE', startAt: d(-14, 17, 0), endAt: d(-14, 17, 0), allDay: true, clientName: 'Roberto Alvarez', status: 'COMPLETED' },
+    { title: 'Pretrial conference — State v. Karen Mitchell', eventType: 'COURT_DATE', startAt: d(-7, 13, 30), endAt: d(-7, 14, 30), location: 'Dakota County — 1st Judicial District Court, Hastings', courtroom: 'Courtroom 310', judge: 'Hon. James Watkins', clientName: 'Karen Mitchell', status: 'COMPLETED' },
+
+    // Today / this week
+    { title: 'Client prep meeting — Deshawn Williams', eventType: 'CLIENT_MEETING', startAt: d(0, 10, 0), endAt: d(0, 11, 0), location: 'VLF Office — Conference Room A', clientName: 'Deshawn Williams' },
+    { title: 'Motion filing deadline — State v. Roberto Alvarez', eventType: 'DEADLINE', startAt: d(1), endAt: d(1), allDay: true, clientName: 'Roberto Alvarez' },
+    { title: 'Status hearing — State v. Marcus Thompson', eventType: 'COURT_DATE', startAt: d(2, 11, 0), endAt: d(2, 11, 30), location: 'Hennepin County — 4th Judicial District Court, Minneapolis', courtroom: 'Courtroom 1256', judge: 'Hon. Sandra Liu', clientName: 'Marcus Thompson' },
+    { title: 'Team meeting — case review sync', eventType: 'GENERAL', startAt: d(3, 8, 30), endAt: d(3, 9, 30), location: 'VLF Office' },
+    { title: 'Deposition — expert witness (Dr. Patel)', eventType: 'GENERAL', startAt: d(4, 13, 0), endAt: d(4, 15, 0), location: 'Hartmann & Associates, 401 N Robert St, St. Paul', clientName: 'Angela Foster' },
+
+    // Next 2 weeks
+    { title: 'Suppression hearing — State v. Roberto Alvarez', eventType: 'COURT_DATE', startAt: d(8, 9, 30), endAt: d(8, 11, 0), location: 'Hennepin County — 4th Judicial District Court, Minneapolis', courtroom: 'Courtroom 1843', judge: 'Hon. Michael Chang', clientName: 'Roberto Alvarez' },
+    { title: 'Response deadline — Chen v. Apex Properties', eventType: 'DEADLINE', startAt: d(10), endAt: d(10), allDay: true, clientName: 'Apex Properties' },
+    { title: 'Client meeting — State v. Angela Foster', eventType: 'CLIENT_MEETING', startAt: d(11, 15, 0), endAt: d(11, 16, 0), location: 'VLF Office — Conference Room B', clientName: 'Angela Foster' },
+    { title: 'Jury trial — State v. Tyrone Jackson', eventType: 'COURT_DATE', startAt: d(14, 9, 0), endAt: d(14, 17, 0), location: 'Hennepin County — 4th Judicial District Court, Minneapolis', courtroom: 'Courtroom 859', judge: 'Hon. Richard Abrams', clientName: 'Tyrone Jackson' },
+
+    // Further future
+    { title: 'Sentencing hearing — State v. Marcus Thompson', eventType: 'COURT_DATE', startAt: d(28, 10, 0), endAt: d(28, 11, 0), location: 'Hennepin County — 4th Judicial District Court, Minneapolis', courtroom: 'Courtroom 1256', judge: 'Hon. Sandra Liu', clientName: 'Marcus Thompson' },
+    { title: 'CLE seminar — Evidence in the Digital Age', eventType: 'GENERAL', startAt: d(35, 8, 0), endAt: d(35, 16, 0), location: 'Minnesota CLE Center, Minneapolis' },
+    { title: 'Mediation — Peterson v. MN DOT', eventType: 'GENERAL', startAt: d(42, 9, 0), endAt: d(42, 12, 0), location: 'ADR Center, 332 Minnesota St, St. Paul', clientName: 'MN DOT' },
+    { title: 'Expert report deadline — Banks Estate', eventType: 'DEADLINE', startAt: d(60), endAt: d(60), allDay: true, clientName: 'Banks Estate' },
+    { title: 'Trial date — State v. Angela Foster', eventType: 'COURT_DATE', startAt: d(90, 9, 0), endAt: d(90, 17, 0), location: 'Ramsey County — 2nd Judicial District Court, St. Paul', courtroom: 'Courtroom 1450', judge: 'Hon. Patricia Simmons', clientName: 'Angela Foster' },
+  ]
+
+  let calCount = 0
+  for (const evt of calendarEvents) {
+    const client = evt.clientName ? findClient(evt.clientName) : null
+    const existing = await prisma.calendarEvent.findFirst({
+      where: { title: evt.title, startAt: evt.startAt },
+    })
+    if (!existing) {
+      await prisma.calendarEvent.create({
+        data: {
+          title: evt.title,
+          eventType: evt.eventType,
+          startAt: evt.startAt,
+          endAt: evt.endAt,
+          allDay: evt.allDay || false,
+          location: evt.location || null,
+          courtroom: evt.courtroom || null,
+          judge: evt.judge || null,
+          clientId: client?.id || null,
+          status: evt.status || 'SCHEDULED',
+        },
+      })
+      calCount++
+    }
+  }
+  console.log(`  ${calCount} calendar events`)
 
   console.log('Seed completed!')
 }

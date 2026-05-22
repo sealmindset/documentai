@@ -79,7 +79,7 @@ export function Sidebar() {
         <Shield className="h-8 w-8 text-blue-500" />
         <div>
           <h1 className="text-lg font-bold text-white">Document AI</h1>
-          <p className="text-xs text-gray-400">Vanmerven Law Firm</p>
+          <p className="text-xs text-gray-400">Vanmeveren Law Firm</p>
         </div>
       </div>
 

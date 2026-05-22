@@ -1,6 +1,6 @@
 # Document AI Platform
 
-An AI-powered Legal Document Intelligence platform for Vanmerven Law Firm (VLF), automating document reviews, compliance monitoring, and legal workflow management.
+An AI-powered Legal Document Intelligence platform for Vanmeveren Law Firm (VLF), automating document reviews, compliance monitoring, and legal workflow management.
 
 ## Project Overview
 

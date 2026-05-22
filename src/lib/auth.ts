@@ -198,10 +198,10 @@ export async function findOrCreateUser(
     }
   }
 
-  // If no existing user, create with default VIEWER role
+  // If no existing user, create with default ATTORNEY role
   if (!user) {
     const viewerRole = await prisma.role.findUnique({
-      where: { name: 'VIEWER' },
+      where: { name: 'ATTORNEY' },
       include: {
         rolePermissions: {
           include: { permission: true },
@@ -210,7 +210,7 @@ export async function findOrCreateUser(
     })
 
     if (!viewerRole) {
-      throw new Error('Default VIEWER role not found. Run seed first.')
+      throw new Error('Default ATTORNEY role not found. Run seed first.')
     }
 
     user = await prisma.user.create({

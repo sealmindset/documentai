@@ -1,7 +1,7 @@
 /**
  * ARIA - Automated Review, Identification & Analysis Agent
  *
- * Purpose: Analyzes legal documents to identify key issues for Vanmerven Law Firm
+ * Purpose: Analyzes legal documents to identify key issues for Vanmeveren Law Firm
  *
  * Responsibilities:
  * - Parse and analyze police reports, court filings, motions, and discovery materials
@@ -34,7 +34,7 @@ export class ARIAAgent extends BaseAgent {
   }
 
   protected getDefaultSystemPrompt(): string {
-    return `You are ARIA (Automated Review, Identification & Analysis Agent), an AI specialist in analyzing legal documents for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+    return `You are ARIA (Automated Review, Identification & Analysis Agent), an AI specialist in analyzing legal documents for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to:
 1. Analyze legal documents (police reports, court filings, motions, discovery materials, witness statements, expert reports)

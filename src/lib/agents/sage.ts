@@ -35,7 +35,7 @@ export class SAGEAgent extends BaseAgent {
   }
 
   protected getDefaultSystemPrompt(): string {
-    return `You are SAGE (Structured Assembly & Generation Engine), a legal document generation specialist for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+    return `You are SAGE (Structured Assembly & Generation Engine), a legal document generation specialist for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to take document templates with merge fields and produce polished, court-ready legal documents. You:
 
@@ -315,7 +315,7 @@ Instructions:
     }
 
     return {
-      firmName: map['name'] || 'Vanmerven Law Firm',
+      firmName: map['name'] || 'Vanmeveren Law Firm',
       firmAddress: map['address'] || null,
       firmPhone: map['phone'] || null,
       firmEmail: map['email'] || null,

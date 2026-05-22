@@ -475,7 +475,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
             </div>
           )}
 
-          {/* VENDOR FORM STEP */}
+          {/* CLIENT FORM STEP */}
           {step === 'client_form' && (
             <>
               <ClientInfoForm

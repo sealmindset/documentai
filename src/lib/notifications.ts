@@ -7,7 +7,7 @@
 
 import type { Prisma } from '@prisma/client'
 
-const INTERNAL_ROLES = ['ADMIN', 'ANALYST', 'VIEWER']
+const INTERNAL_ROLES = ['ADMIN', 'MANAGING_PARTNER', 'ATTORNEY']
 
 /**
  * Build a Prisma WHERE clause that scopes notifications to the current user.

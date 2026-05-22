@@ -1,7 +1,7 @@
 {
   "name": "document-ai-platform",
   "version": "1.0.0",
-  "description": "AI-Powered Legal Document Intelligence Platform for Vanmerven Law Firm",
+  "description": "AI-Powered Legal Document Intelligence Platform for Vanmeveren Law Firm",
   "private": true,
   "scripts": {
     "dev": "next dev",

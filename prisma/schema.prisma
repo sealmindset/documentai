@@ -135,6 +135,7 @@ model Client {
   caseContacts       CaseContact[]
   generatedDocuments GeneratedDocument[]
   outboundEmails     OutboundEmail[]
+  calendarEvents     CalendarEvent[]
 
   @@map("clients")
 }
@@ -713,6 +714,43 @@ model SharePointFile {
   @@index([syncConfigId])
   @@index([status])
   @@map("sharepoint_files")
+}
+
+// ============================================
+// CALENDAR EVENTS
+// ============================================
+
+model CalendarEvent {
+  id              String    @id @default(cuid())
+  title           String
+  description     String?
+  eventType       String    // COURT_DATE, DEADLINE, CLIENT_MEETING, GENERAL
+  startAt         DateTime
+  endAt           DateTime
+  allDay          Boolean   @default(false)
+  location        String?
+  courtroom       String?
+  judge           String?
+  clientId        String?
+  reminderMinutes Int?
+  status          String    @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  color           String?
+
+  // M365 Outlook Sync
+  outlookEventId   String?  @unique
+  outlookChangeKey String?
+  lastSyncedAt     DateTime?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([startAt, endAt])
+  @@index([clientId])
+  @@index([eventType])
+  @@map("calendar_events")
 }
 
 // ============================================

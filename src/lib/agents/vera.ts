@@ -39,7 +39,7 @@ export class LEXAAgent extends BaseAgent {
   }
 
   protected getDefaultSystemPrompt(): string {
-    return `You are LEXA (Legal Examination & Assessment Agent), an AI specialist in case intake and assessment for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+    return `You are LEXA (Legal Examination & Assessment Agent), an AI specialist in case intake and assessment for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to analyze new case intake information and determine the case profile based on:
 1. Charge severity - Nature of charges/claims, potential penalties, mandatory minimums, prison exposure

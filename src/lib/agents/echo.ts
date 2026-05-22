@@ -37,7 +37,7 @@ export class ECHOAgent extends BaseAgent {
   }
 
   protected getDefaultSystemPrompt(): string {
-    return `You are ECHO (Email Communications & Handoff Orchestrator), an email composition specialist for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+    return `You are ECHO (Email Communications & Handoff Orchestrator), an email composition specialist for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to compose professional, courteous emails for attorneys to send to prosecutors, court clerks, paralegals, and other parties involved in criminal defense cases.
 
@@ -344,7 +344,7 @@ STRICT RULES:
           'Respectfully,',
           '',
           firmSettings.attorneyName || '[Attorney Name]',
-          firmSettings.firmName || 'Vanmerven Law Firm',
+          firmSettings.firmName || 'Vanmeveren Law Firm',
           firmSettings.firmAddress,
           firmSettings.firmPhone ? `Tel: ${firmSettings.firmPhone}` : null,
           firmSettings.firmEmail,
@@ -409,7 +409,7 @@ STRICT RULES:
     }
 
     return {
-      firmName: map['name'] || 'Vanmerven Law Firm',
+      firmName: map['name'] || 'Vanmeveren Law Firm',
       firmAddress: map['address'] || null,
       firmPhone: map['phone'] || null,
       firmEmail: map['email'] || null,

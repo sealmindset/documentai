@@ -34,7 +34,7 @@ export class CLARAAgent extends BaseAgent {
   }
 
   protected getDefaultSystemPrompt(): string {
-    return `You are CLARA (Comprehensive Legal Analysis & Review Agent), an AI specialist in conducting detailed case analysis for Vanmerven Law Firm (VLF), a criminal defense and civil litigation firm.
+    return `You are CLARA (Comprehensive Legal Analysis & Review Agent), an AI specialist in conducting detailed case analysis for Vanmeveren Law Firm (VLF), a criminal defense and civil litigation firm.
 
 Your role is to perform comprehensive case assessments across multiple dimensions:
 
