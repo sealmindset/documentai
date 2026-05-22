@@ -10,7 +10,7 @@
 - [x] ~~**Standards: Prompt Management upgrade** - Upgraded to Tier 2 Standard: card-based registry, 5 scaffold components (prompt-card, prompt-editor, safety-indicator, variable-pill, version-timeline), save→test→publish workflow, safety validation, version restore, grid/list view toggle~~
 - [x] ~~**Standards: Wrap existing API routes with withRequestLog** - 21 route files (55+ handlers) wrapped: clients, contacts, orchestrator, documents, emails, reports, issues, case-reviews, generate, sharepoint~~
 - [x] ~~**Standards: ESLint warnings cleanup** - All 93 warnings fixed (unused vars, any types, console.log) across 38 files. 0 warnings remaining~~
-- [ ] **Onboarding: Add business criticality selection** - The onboarding wizard defaults to STANDARD business criticality; add a selector step for data types accessed, system integrations, PII/PHI/PCI flags, and criticality level
+- [x] ~~**Onboarding: Add business criticality selection** - Case Classification step added: priority (Standard/Important/Critical), data sensitivity (PII/PHI/PCI), data types, and system integrations — all passed to LEXA agent~~
 - [x] **Naming: Full terminology normalization** - Renamed all TPRM terminology to legal-centric: Vendor→Client, RiskProfile→ClientProfile, RiskAssessment→CaseReview, RiskFinding→Issue, RemediationAction→ActionItem. DB migration, API routes, frontend, agents, tests all updated
 
 ## Low Priority

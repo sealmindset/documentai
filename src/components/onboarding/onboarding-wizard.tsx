@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { FileUploadZone, type UploadedFile } from './file-upload-zone'
 import { ClientInfoForm, type ClientFormData } from './client-info-form'
+import { CaseClassificationForm, type CaseClassificationData } from './case-classification-form'
 import { DedupMatchDialog, type DedupMatchResult } from './dedup-match-dialog'
 import { PipelineProgress } from './pipeline-progress'
 
@@ -32,6 +33,7 @@ type Step =
   | 'dedup'
   | 'dedup_review'
   | 'client_form'
+  | 'classification'
   | 'confirming'
   | 'complete'
 
@@ -128,6 +130,14 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
   const [pipelineRunning, setPipelineRunning] = useState(false)
   const [createdClientId, setCreatedClientId] = useState<string | null>(null)
   const [incompleteFields, setIncompleteFields] = useState<string[]>([])
+  const [classification, setClassification] = useState<CaseClassificationData>({
+    businessCriticality: 'STANDARD',
+    hasPiiAccess: false,
+    hasPhiAccess: false,
+    hasPciAccess: false,
+    dataTypesAccessed: [],
+    systemIntegrations: [],
+  })
 
   const handleFilesAdded = useCallback((newFiles: File[]) => {
     setFiles((prev) => [
@@ -266,12 +276,17 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
     setStep('client_form')
   }
 
-  // Step 4 → 5: Confirm and run pipeline
+  // Step 4 → 5: Go to classification step
   const handleClientFormConfirm = () => {
     if (!clientForm.name.trim()) {
       toast({ title: 'Name required', description: 'Please enter a company name.', variant: 'destructive' })
       return
     }
+    setStep('classification')
+  }
+
+  // Step 5 → 6: Confirm classification and run pipeline
+  const handleClassificationConfirm = () => {
     setStep('confirming')
     handleConfirm('create_new', null)
   }
@@ -294,12 +309,12 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
           extractedText: ext.extractedText,
           analysisResult: ext.documentAnalysis,
         })),
-        businessCriticality: 'STANDARD',
-        dataTypesAccessed: [],
-        systemIntegrations: [],
-        hasPiiAccess: false,
-        hasPhiAccess: false,
-        hasPciAccess: false,
+        businessCriticality: classification.businessCriticality,
+        dataTypesAccessed: classification.dataTypesAccessed,
+        systemIntegrations: classification.systemIntegrations,
+        hasPiiAccess: classification.hasPiiAccess,
+        hasPhiAccess: classification.hasPhiAccess,
+        hasPciAccess: classification.hasPciAccess,
       }
 
       if (confirmAction === 'create_new') {
@@ -361,6 +376,14 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
     setSelectedMatch(null)
     setWorkflowStages([])
     setCreatedClientId(null)
+    setClassification({
+      businessCriticality: 'STANDARD',
+      hasPiiAccess: false,
+      hasPhiAccess: false,
+      hasPciAccess: false,
+      dataTypesAccessed: [],
+      systemIntegrations: [],
+    })
     onClose()
     onComplete?.()
   }
@@ -371,6 +394,7 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
     dedup: 'Checking for Duplicates...',
     dedup_review: 'Review Match',
     client_form: 'Review Client Information',
+    classification: 'Case Classification',
     confirming: 'Processing...',
     complete: 'Onboarding Complete',
   }
@@ -464,6 +488,25 @@ export function OnboardingWizard({ open, onClose, onComplete }: OnboardingWizard
               <DialogFooter>
                 <Button variant="outline" onClick={handleClose}>Cancel</Button>
                 <Button onClick={handleClientFormConfirm}>
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Next: Case Classification
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* CLASSIFICATION STEP */}
+          {step === 'classification' && (
+            <>
+              <CaseClassificationForm
+                data={classification}
+                onChange={(field, value) =>
+                  setClassification((prev) => ({ ...prev, [field]: value }))
+                }
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setStep('client_form')}>Back</Button>
+                <Button onClick={handleClassificationConfirm}>
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Create Client & Start Review
                 </Button>
