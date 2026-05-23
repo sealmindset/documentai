@@ -65,8 +65,14 @@ export async function GET(request: NextRequest) {
     // 6. Set httpOnly cookie
     await setAuthCookie(token)
 
-    // 7. Redirect to dashboard
-    return NextResponse.redirect(new URL('/dashboard', frontendUrl))
+    // 7. Redirect based on role
+    const roleName = user.role?.name
+    let destination = '/dashboard'
+    if (roleName === 'MANAGING_PARTNER') destination = '/partner'
+    else if (roleName === 'ATTORNEY') destination = '/attorney'
+    else if (roleName === 'PARALEGAL') destination = '/attorney'
+
+    return NextResponse.redirect(new URL(destination, frontendUrl))
   } catch (error) {
     console.error('Auth callback error:', error)
     return NextResponse.redirect(

@@ -2,6 +2,23 @@
 
 All notable changes to Document AI Platform will be documented in this file.
 
+## [5.1.0] - 2026-05-23
+
+### Added
+- **Managing Partner Portal** — dedicated firm overview at `/partner`
+  - Firm Overview landing page with personalized greeting, alerts, and quick stats (active cases, open issues, overdue items, pending docs)
+  - Case pipeline visualization with status-linked cards (New → Accepted → Assigned → Active → Closed)
+  - Attorney Workload table: active cases, open issues, overdue items, and load indicator (Heavy/Moderate/Light) per attorney
+  - Cases by Type breakdown, Upcoming Deadlines (30/90/180 day buckets), Pending Motions
+  - Caseload by Attorney bar chart and Billing Summary with active vs closed fees
+  - Court Calendar (next 30 days) with color-coded event types
+  - Recent AI Agent Activity feed
+  - Sidebar navigation to all operational pages (no admin section)
+  - Quick-switch link to Attorney Portal from sidebar
+  - Dedicated API endpoint `/api/partner/overview` with attorney workload aggregation
+- **Role-based login routing** — auth callback now redirects users based on role:
+  - ADMIN → `/dashboard`, MANAGING_PARTNER → `/partner`, ATTORNEY/PARALEGAL → `/attorney`
+
 ## [5.0.0] - 2026-05-22
 
 ### Added
