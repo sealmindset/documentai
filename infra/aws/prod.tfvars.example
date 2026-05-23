@@ -1,0 +1,34 @@
+# Copy to prod.tfvars and fill in actual values
+# NEVER commit prod.tfvars to git
+
+project     = "docai"
+environment = "prod"
+aws_region  = "us-east-1"
+
+# Database — generate: openssl rand -base64 32
+db_password = ""
+
+# JWT — generate: openssl rand -hex 32
+jwt_secret = ""
+
+# OIDC (Entra ID)
+oidc_issuer_url    = "https://login.microsoftonline.com/{tenant_id}/v2.0"
+oidc_client_id     = ""
+oidc_client_secret = ""
+
+# AI (Direct Anthropic API)
+anthropic_api_key = ""
+
+# M365 (optional — for email/calendar)
+m365_tenant_id    = ""
+m365_sender_email = ""
+
+# ECS sizing (256 CPU = 0.25 vCPU, 512 MB RAM — minimalist)
+container_cpu    = 256
+container_memory = 512
+
+# RDS sizing (free tier eligible)
+db_instance_class = "db.t4g.micro"
+
+# SplashDown Document Portal — generate: openssl rand -hex 32
+splashdown_session_secret = ""

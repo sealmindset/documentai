@@ -31,6 +31,12 @@ import {
   Plus,
   UserPlus,
   Building,
+  Zap,
+  Send,
+  FilePlus,
+  MailPlus,
+  Eye,
+  Check,
 } from 'lucide-react'
 
 interface CaseDetail {
@@ -65,8 +71,13 @@ interface CaseContact {
   }
 }
 
-const TABS = ['Overview', 'Documents', 'Contacts', 'Issues', 'Tasks'] as const
+const TABS = ['Overview', 'Documents', 'Contacts', 'Issues', 'Tasks', 'Actions'] as const
 type Tab = typeof TABS[number]
+
+interface DocTemplate { id: string; name: string; category: string }
+interface EmailTemplate { id: string; name: string; category: string; subject: string }
+interface GeneratedDoc { id: string; title: string; content: string; status: string; templateName?: string }
+interface ComposedEmail { id: string; subject: string; body: string; recipientEmail: string; recipientName: string; status: string }
 
 const ROLE_LABELS: Record<string, string> = {
   OPPOSING_COUNSEL: 'Opposing Counsel', PROSECUTOR: 'Prosecutor', CO_COUNSEL: 'Co-Counsel',
@@ -91,6 +102,17 @@ export default function CaseDetailPage() {
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const [docTemplates, setDocTemplates] = useState<DocTemplate[]>([])
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([])
+  const [generatedDocs, setGeneratedDocs] = useState<GeneratedDoc[]>([])
+  const [composedEmails, setComposedEmails] = useState<ComposedEmail[]>([])
+  const [generating, setGenerating] = useState<string | null>(null)
+  const [composing, setComposing] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [approving, setApproving] = useState<string | null>(null)
+  const [sending, setSending] = useState<string | null>(null)
+  const [pipelineRunning, setPipelineRunning] = useState(false)
 
   const [showContactForm, setShowContactForm] = useState(false)
   const [contactMode, setContactMode] = useState<'new' | 'existing'>('new')
@@ -279,6 +301,142 @@ export default function CaseDetailPage() {
     }
   }, [params.id, contactMode, selectedExisting, contactForm, resetContactForm])
 
+  const generateDocument = useCallback(async (templateId: string) => {
+    if (!params.id) return
+    setGenerating(templateId)
+    setActionError(null)
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: params.id, templateId }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Generation failed' }))
+        throw new Error(err.error || 'Document generation failed')
+      }
+      const data = await res.json()
+      setGeneratedDocs((prev) => [data.document, ...prev])
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Document generation failed')
+    } finally {
+      setGenerating(null)
+    }
+  }, [params.id])
+
+  const composeEmail = useCallback(async (emailTemplateId: string, recipientContactId?: string) => {
+    if (!params.id) return
+    setComposing(emailTemplateId)
+    setActionError(null)
+    try {
+      const body: Record<string, unknown> = {
+        clientId: params.id,
+        emailTemplateId,
+        triggeredBy: 'MANUAL',
+      }
+      if (recipientContactId) body.recipientContactId = recipientContactId
+      const res = await fetch('/api/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Composition failed' }))
+        throw new Error(err.error || 'Email composition failed')
+      }
+      const data = await res.json()
+      setComposedEmails((prev) => [data.email, ...prev])
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Email composition failed')
+    } finally {
+      setComposing(null)
+    }
+  }, [params.id])
+
+  const approveDocument = useCallback(async (docId: string) => {
+    setApproving(docId)
+    try {
+      const res = await fetch(`/api/generated-documents/${docId}/approve`, { method: 'PUT' })
+      if (res.ok) {
+        setGeneratedDocs((prev) => prev.map((d) => d.id === docId ? { ...d, status: 'APPROVED' } : d))
+      }
+    } finally {
+      setApproving(null)
+    }
+  }, [])
+
+  const approveEmail = useCallback(async (emailId: string) => {
+    setApproving(emailId)
+    try {
+      const res = await fetch(`/api/emails/${emailId}/approve`, { method: 'PUT' })
+      if (res.ok) {
+        setComposedEmails((prev) => prev.map((e) => e.id === emailId ? { ...e, status: 'APPROVED' } : e))
+      }
+    } finally {
+      setApproving(null)
+    }
+  }, [])
+
+  const sendEmail = useCallback(async (emailId: string) => {
+    setSending(emailId)
+    try {
+      const res = await fetch(`/api/emails/${emailId}/send`, { method: 'POST' })
+      if (res.ok) {
+        setComposedEmails((prev) => prev.map((e) => e.id === emailId ? { ...e, status: 'SENT' } : e))
+      }
+    } finally {
+      setSending(null)
+    }
+  }, [])
+
+  const runNewRepresentation = useCallback(async () => {
+    if (!params.id) return
+    setPipelineRunning(true)
+    setActionError(null)
+    try {
+      const entryTemplate = docTemplates.find((t) => t.name === 'Entry of Appearance')
+      const courtesyTemplate = emailTemplates.find((t) => t.name === 'Prosecutor Courtesy Notice')
+      const prosecutor = contacts.find((c) => c.role === 'PROSECUTOR')
+
+      if (!entryTemplate) throw new Error('Entry of Appearance template not found. Seed templates first.')
+
+      const genRes = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: params.id, templateId: entryTemplate.id }),
+      })
+      if (!genRes.ok) {
+        const err = await genRes.json().catch(() => ({ error: 'Generation failed' }))
+        throw new Error(err.error || 'Document generation failed')
+      }
+      const genData = await genRes.json()
+      setGeneratedDocs((prev) => [genData.document, ...prev])
+
+      if (courtesyTemplate && prosecutor) {
+        const emailBody: Record<string, unknown> = {
+          clientId: params.id,
+          emailTemplateId: courtesyTemplate.id,
+          recipientContactId: prosecutor.contact.id,
+          attachmentIds: [genData.document.id],
+          triggeredBy: 'SAGE_PIPELINE',
+        }
+        const emailRes = await fetch('/api/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emailBody),
+        })
+        if (emailRes.ok) {
+          const emailData = await emailRes.json()
+          setComposedEmails((prev) => [emailData.email, ...prev])
+        }
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Pipeline failed')
+    } finally {
+      setPipelineRunning(false)
+    }
+  }, [params.id, docTemplates, emailTemplates, contacts])
+
   useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current)
@@ -291,9 +449,13 @@ export default function CaseDetailPage() {
     Promise.all([
       fetch(`/api/clients/${params.id}`).then((r) => r.ok ? r.json() : null),
       fetch(`/api/clients/${params.id}/contacts`).then((r) => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([client, contactData]) => {
+      fetch('/api/templates').then((r) => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/email-templates').then((r) => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([client, contactData, templates, eTemplates]) => {
       setCaseData(client)
       setContacts(contactData?.contacts || [])
+      setDocTemplates(templates)
+      setEmailTemplates(eTemplates)
     }).finally(() => setLoading(false))
   }, [params.id])
 
@@ -360,7 +522,8 @@ export default function CaseDetailPage() {
           const count = tab === 'Documents' ? caseData.documents.length :
             tab === 'Issues' ? openIssues.length :
             tab === 'Contacts' ? contacts.length :
-            tab === 'Tasks' ? (caseData.actionItems?.length || 0) : null
+            tab === 'Tasks' ? (caseData.actionItems?.length || 0) :
+            tab === 'Actions' ? (generatedDocs.length + composedEmails.length) || null : null
           return (
             <button
               key={tab}
@@ -1000,6 +1163,241 @@ export default function CaseDetailPage() {
             <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
               <Clock className="h-10 w-10 text-gray-300 mx-auto mb-2" />
               <p className="text-gray-500">No action items</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'Actions' && (
+        <div className="space-y-6">
+          {/* Pipeline Action */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-blue-600" /> New Representation Package
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Generates Entry of Appearance and drafts a courtesy email to the prosecutor with the document attached.
+                </p>
+                {!contacts.find((c) => c.role === 'PROSECUTOR') && (
+                  <p className="text-xs text-amber-700 mt-2 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" /> Add a Prosecutor contact to enable courtesy email
+                  </p>
+                )}
+              </div>
+              <Button
+                onClick={runNewRepresentation}
+                disabled={pipelineRunning || !docTemplates.find((t) => t.name === 'Entry of Appearance')}
+                className="shrink-0"
+              >
+                {pipelineRunning ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Running...</>
+                ) : (
+                  <><Zap className="h-4 w-4 mr-2" /> Run Pipeline</>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Document Generation */}
+          <div>
+            <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+              <FilePlus className="h-5 w-5 text-gray-600" /> Generate Documents
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {docTemplates.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => generateDocument(template.id)}
+                  disabled={generating === template.id}
+                  className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 transition-colors text-left disabled:opacity-50"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                    {generating === template.id ? (
+                      <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                    ) : (
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm">{template.name}</p>
+                    <p className="text-xs text-gray-500">{template.category}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+                </button>
+              ))}
+              {docTemplates.length === 0 && (
+                <p className="text-sm text-gray-400 col-span-2">No document templates available</p>
+              )}
+            </div>
+          </div>
+
+          {/* Email Composition */}
+          <div>
+            <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+              <MailPlus className="h-5 w-5 text-gray-600" /> Compose Emails
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {emailTemplates.map((template) => {
+                const prosecutor = contacts.find((c) => c.role === 'PROSECUTOR')
+                return (
+                  <button
+                    key={template.id}
+                    onClick={() => composeEmail(template.id, prosecutor?.contact.id)}
+                    disabled={composing === template.id}
+                    className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 transition-colors text-left disabled:opacity-50"
+                  >
+                    <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+                      {composing === template.id ? (
+                        <Loader2 className="h-5 w-5 text-purple-600 animate-spin" />
+                      ) : (
+                        <Mail className="h-5 w-5 text-purple-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm">{template.name}</p>
+                      <p className="text-xs text-gray-500">{template.category}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+                  </button>
+                )
+              })}
+              {emailTemplates.length === 0 && (
+                <p className="text-sm text-gray-400 col-span-2">No email templates available</p>
+              )}
+            </div>
+          </div>
+
+          {/* Error */}
+          {actionError && (
+            <div className="bg-red-50 rounded-xl border border-red-200 p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-red-800">Action failed</p>
+                <p className="text-sm text-red-600 mt-0.5">{actionError}</p>
+              </div>
+              <button onClick={() => setActionError(null)}>
+                <X className="h-4 w-4 text-red-400 hover:text-red-600" />
+              </button>
+            </div>
+          )}
+
+          {/* Generated Documents */}
+          {generatedDocs.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5 text-green-600" /> Generated Documents
+              </h3>
+              <div className="space-y-3">
+                {generatedDocs.map((doc) => (
+                  <div key={doc.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900">{doc.title || doc.templateName || 'Generated Document'}</p>
+                        <Badge variant={
+                          doc.status === 'APPROVED' ? 'info' as BadgeProps['variant'] :
+                          doc.status === 'DRAFT' || doc.status === 'PENDING_REVIEW' ? 'medium' as BadgeProps['variant'] :
+                          doc.status === 'SENT' || doc.status === 'FILED' ? 'low' as BadgeProps['variant'] :
+                          'outline' as BadgeProps['variant']
+                        } className="mt-1">{doc.status}</Badge>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        {(doc.status === 'DRAFT' || doc.status === 'PENDING_REVIEW') && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => approveDocument(doc.id)}
+                            disabled={approving === doc.id}
+                          >
+                            {approving === doc.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <><Check className="h-3.5 w-3.5 mr-1" /> Approve</>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    {doc.content && (
+                      <details className="mt-2">
+                        <summary className="text-sm text-blue-600 cursor-pointer hover:underline flex items-center gap-1">
+                          <Eye className="h-3.5 w-3.5" /> Preview document
+                        </summary>
+                        <pre className="mt-2 text-xs text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto whitespace-pre-wrap max-h-64 overflow-y-auto border border-gray-100">
+                          {doc.content}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Composed Emails */}
+          {composedEmails.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                <Mail className="h-5 w-5 text-purple-600" /> Composed Emails
+              </h3>
+              <div className="space-y-3">
+                {composedEmails.map((email) => (
+                  <div key={email.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900">{email.subject}</p>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                          To: {email.recipientName || email.recipientEmail || 'Unknown'}
+                          {email.recipientEmail && email.recipientName ? ` <${email.recipientEmail}>` : ''}
+                        </p>
+                        <Badge variant={
+                          email.status === 'SENT' ? 'low' as BadgeProps['variant'] :
+                          email.status === 'APPROVED' ? 'info' as BadgeProps['variant'] :
+                          'medium' as BadgeProps['variant']
+                        } className="mt-1">{email.status}</Badge>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        {(email.status === 'DRAFT' || email.status === 'PENDING_APPROVAL') && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => approveEmail(email.id)}
+                            disabled={approving === email.id}
+                          >
+                            {approving === email.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <><Check className="h-3.5 w-3.5 mr-1" /> Approve</>
+                            )}
+                          </Button>
+                        )}
+                        {email.status === 'APPROVED' && (
+                          <Button
+                            size="sm"
+                            onClick={() => sendEmail(email.id)}
+                            disabled={sending === email.id}
+                          >
+                            {sending === email.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <><Send className="h-3.5 w-3.5 mr-1" /> Send</>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <details className="mt-2">
+                      <summary className="text-sm text-blue-600 cursor-pointer hover:underline flex items-center gap-1">
+                        <Eye className="h-3.5 w-3.5" /> Preview email body
+                      </summary>
+                      <div className="mt-2 text-sm text-gray-700 bg-gray-50 rounded-lg p-4 whitespace-pre-wrap max-h-48 overflow-y-auto border border-gray-100">
+                        {email.body}
+                      </div>
+                    </details>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

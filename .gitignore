@@ -88,12 +88,12 @@ prisma_*.txt
 dev.db
 
 # Terraform
-infra/.terraform/
-infra/*.tfstate
-infra/*.tfstate.backup
-infra/.terraform.lock.hcl
-infra/prod.tfvars
-infra/staging.tfvars
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.backup
+infra/**/.terraform.lock.hcl
+infra/**/prod.tfvars
+infra/**/staging.tfvars
 
 # Legacy (removed in cleanup -- prevent re-addition)
 /skills/

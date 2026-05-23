@@ -2,6 +2,21 @@
 
 All notable changes to Document AI Platform will be documented in this file.
 
+## [5.2.0] - 2026-05-23
+
+### Added
+- **Actions Tab on Case Detail** — attorneys can generate documents and compose emails directly from a case
+  - "New Representation Package" pipeline: one-click Entry of Appearance + courtesy email to prosecutor with document attached
+  - Generate Documents section: 8 document templates (Entry of Appearance, Notice of Representation, Demand for Discovery, Waiver of Arraignment, Discovery Request, Motion for Continuance, Courtesy Letter, Client Engagement Letter)
+  - Compose Emails section: 7 email templates (Prosecutor Courtesy Notice, Court Clerk Notification, Discovery/Paralegal Follow-Up, Scheduling, Client Update, General Follow-Up)
+  - Inline document preview, approve/send workflow, SAGE→ECHO pipeline
+- **New Representation Pipeline API** — `POST /api/attorney/cases/[id]/new-representation` orchestrates SAGE document generation + ECHO courtesy email composition in one call
+- **3 new document templates** — Notice of Representation (NOTICE), Demand for Discovery (PLEADING, Minn. R. Crim. P. 9.01), Waiver of Arraignment (PLEADING)
+- **3 new email templates** — Court Clerk Notification (COURTESY), Client Case Update (FOLLOW_UP), Paralegal Discovery Follow-Up (DISCOVERY_REQUEST)
+
+### Fixed
+- Calendar seed dedup — matching on `title` only (not `title + startAt`), using update-or-create pattern to prevent duplicates across restarts
+
 ## [5.1.0] - 2026-05-23
 
 ### Added

@@ -2424,6 +2424,137 @@ _______________________________          _______________
 {{defendant.name}}                        Date`,
       requiredFields: JSON.stringify(['defendant.name', 'court.caseNumber', 'attorney.name']),
     },
+    {
+      name: 'Notice of Representation',
+      category: 'NOTICE',
+      subcategory: 'Initial Filing',
+      jurisdiction: 'MN',
+      content: `STATE OF MINNESOTA                     DISTRICT COURT
+{{court.county}} COUNTY                {{court.division}} JUDICIAL DISTRICT
+
+State of Minnesota,
+          Plaintiff,
+                                       Case No. {{case.caseNumber}}
+vs.
+                                       NOTICE OF REPRESENTATION
+{{defendant.legalName}},
+          Defendant.
+
+TO: THE CLERK OF THE ABOVE-NAMED COURT:
+
+PLEASE TAKE NOTICE that {{attorney.name}}, {{attorney.firm}}, hereby enters an appearance on behalf of the Defendant, {{defendant.legalName}}, in the above-entitled matter.
+
+All future notices, pleadings, and communications regarding this case should be directed to:
+
+{{attorney.name}}
+{{attorney.firm}}
+{{attorney.address}}
+Phone: {{attorney.phone}}
+Fax: {{attorney.fax}}
+Email: {{attorney.email}}
+
+Dated: {{dates.today}}
+
+Respectfully submitted,
+
+
+_______________________________
+{{attorney.name}}
+Attorney at Law
+{{attorney.barNumber}}
+{{attorney.firm}}`,
+      requiredFields: JSON.stringify(['defendant.legalName', 'case.caseNumber', 'attorney.name']),
+    },
+    {
+      name: 'Demand for Discovery',
+      category: 'PLEADING',
+      subcategory: 'Discovery',
+      jurisdiction: 'MN',
+      content: `STATE OF MINNESOTA                     DISTRICT COURT
+{{court.county}} COUNTY                {{court.division}} JUDICIAL DISTRICT
+
+State of Minnesota,
+          Plaintiff,
+                                       Case No. {{case.caseNumber}}
+vs.
+                                       DEMAND FOR DISCOVERY
+{{defendant.legalName}},               Pursuant to Minn. R. Crim. P. 9.01
+          Defendant.
+
+TO: {{prosecutor.name}}, {{prosecutor.organization}}
+
+The Defendant, by and through undersigned counsel, hereby demands that the prosecution disclose the following materials pursuant to Minnesota Rules of Criminal Procedure, Rule 9.01:
+
+1. All police reports, supplemental reports, and investigative reports;
+2. All statements of witnesses, whether written, recorded, or summarized;
+3. All body-worn camera and squad car camera recordings;
+4. All photographs, diagrams, and physical evidence;
+5. All laboratory reports, forensic analyses, and expert opinions;
+6. All 911 recordings and dispatch (CAD) reports;
+7. All surveillance video or audio recordings;
+8. All search warrants, applications, and returns;
+9. The defendant's prior criminal record;
+10. Any Brady material, including all evidence favorable to the accused that is material to guilt or punishment;
+11. Any Giglio material, including impeachment evidence regarding prosecution witnesses;
+12. All documents and tangible objects the prosecution intends to use at trial;
+13. Any other information subject to disclosure under Minn. R. Crim. P. 9.01, subd. 1.
+
+The Defendant requests that all discoverable materials be provided within fourteen (14) days of this demand or before any omnibus hearing, whichever is sooner.
+
+Dated: {{dates.today}}
+
+Respectfully submitted,
+
+
+_______________________________
+{{attorney.name}}
+Attorney at Law
+{{attorney.barNumber}}
+{{attorney.firm}}
+{{attorney.address}}
+Phone: {{attorney.phone}}
+Email: {{attorney.email}}`,
+      requiredFields: JSON.stringify(['defendant.legalName', 'case.caseNumber', 'prosecutor.name', 'attorney.name']),
+    },
+    {
+      name: 'Waiver of Arraignment',
+      category: 'PLEADING',
+      subcategory: 'Initial Pleading',
+      jurisdiction: 'MN',
+      content: `STATE OF MINNESOTA                     DISTRICT COURT
+{{court.county}} COUNTY                {{court.division}} JUDICIAL DISTRICT
+
+State of Minnesota,
+          Plaintiff,
+                                       Case No. {{case.caseNumber}}
+vs.
+                                       WAIVER OF ARRAIGNMENT
+{{defendant.legalName}},               AND PLEA OF NOT GUILTY
+          Defendant.
+
+TO THE COURT:
+
+The undersigned Defendant, {{defendant.legalName}}, through counsel, hereby waives formal arraignment in the above-entitled matter and enters a plea of NOT GUILTY to all charges contained in the Complaint.
+
+The Defendant reserves all rights afforded under the Minnesota Rules of Criminal Procedure and the United States and Minnesota Constitutions.
+
+The Defendant requests that the Court schedule this matter for an Omnibus Hearing.
+
+Dated: {{dates.today}}
+
+
+_______________________________
+{{defendant.name}}
+Defendant
+
+
+_______________________________
+{{attorney.name}}
+Attorney for Defendant
+{{attorney.barNumber}}
+{{attorney.firm}}`,
+      requiredFields: JSON.stringify(['defendant.legalName', 'case.caseNumber', 'attorney.name']),
+    },
   ]
 
   for (const t of templates) {
@@ -2507,6 +2638,61 @@ Please let me know if you have any questions or would like to discuss further.
 
 {{attorney.signature}}`,
     },
+    {
+      name: 'Court Clerk Notification',
+      category: 'COURTESY',
+      subject: 'Re: State v. {{client.name}} — {{case.caseNumber}} — Notice of Representation',
+      body: `Dear Clerk of Court,
+
+I am writing to advise that I have been retained to represent {{client.name}} in Case No. {{case.caseNumber}}, currently pending in {{court.name}}.
+
+I have filed a Notice of Representation and respectfully request that all future notices regarding this matter be directed to:
+
+{{attorney.name}}
+{{attorney.firm}}
+{{attorney.address}}
+Phone: {{attorney.phone}}
+Email: {{attorney.email}}
+
+Thank you for your assistance.
+
+{{attorney.signature}}`,
+    },
+    {
+      name: 'Client Case Update',
+      category: 'FOLLOW_UP',
+      subject: 'Update: Your Case — {{case.caseNumber}}',
+      body: `Dear {{client.name}},
+
+I am writing to provide you with an update regarding your case, State v. {{client.name}}, Case No. {{case.caseNumber}}.
+
+[NEEDS INPUT: Case update details]
+
+If you have any questions or concerns, please do not hesitate to contact our office at {{attorney.phone}} or {{attorney.email}}.
+
+Please remember:
+- Do not discuss your case with anyone other than our office
+- Do not post anything about your case on social media
+- Continue to comply with all conditions of your release
+
+{{attorney.signature}}`,
+    },
+    {
+      name: 'Paralegal Discovery Follow-Up',
+      category: 'DISCOVERY_REQUEST',
+      subject: 'Re: State v. {{client.name}} — {{case.caseNumber}} — Discovery Materials',
+      body: `Dear Paralegal,
+
+I am writing to follow up on outstanding discovery materials in the above-referenced matter. Our office submitted a Demand for Discovery on [NEEDS INPUT: date of demand], and we have not yet received the following items:
+
+[NEEDS INPUT: List outstanding items]
+
+The next hearing in this matter is scheduled for {{dates.nextHearingDate}}. We would appreciate receiving these materials at your earliest convenience so that we may adequately prepare.
+
+Thank you for your attention to this matter.
+
+{{attorney.signature}}`,
+    },
   ]
 
   for (const t of emailTemplates) {
@@ -2567,31 +2753,37 @@ Please let me know if you have any questions or would like to discuss further.
     { title: 'Trial date — State v. Angela Foster', eventType: 'COURT_DATE', startAt: d(90, 9, 0), endAt: d(90, 17, 0), location: 'Ramsey County — 2nd Judicial District Court, St. Paul', courtroom: 'Courtroom 1450', judge: 'Hon. Patricia Simmons', clientName: 'Angela Foster' },
   ]
 
-  let calCount = 0
+  let calCreated = 0
+  let calUpdated = 0
   for (const evt of calendarEvents) {
     const client = evt.clientName ? findClient(evt.clientName) : null
     const existing = await prisma.calendarEvent.findFirst({
-      where: { title: evt.title, startAt: evt.startAt },
+      where: { title: evt.title },
     })
-    if (!existing) {
-      await prisma.calendarEvent.create({
-        data: {
-          title: evt.title,
-          eventType: evt.eventType,
-          startAt: evt.startAt,
-          endAt: evt.endAt,
-          allDay: evt.allDay || false,
-          location: evt.location || null,
-          courtroom: evt.courtroom || null,
-          judge: evt.judge || null,
-          clientId: client?.id || null,
-          status: evt.status || 'SCHEDULED',
-        },
+    const data = {
+      title: evt.title,
+      eventType: evt.eventType,
+      startAt: evt.startAt,
+      endAt: evt.endAt,
+      allDay: evt.allDay || false,
+      location: evt.location || null,
+      courtroom: evt.courtroom || null,
+      judge: evt.judge || null,
+      clientId: client?.id || null,
+      status: evt.status || 'SCHEDULED',
+    }
+    if (existing) {
+      await prisma.calendarEvent.update({
+        where: { id: existing.id },
+        data,
       })
-      calCount++
+      calUpdated++
+    } else {
+      await prisma.calendarEvent.create({ data })
+      calCreated++
     }
   }
-  console.log(`  ${calCount} calendar events`)
+  console.log(`  ${calCreated + calUpdated} calendar events (${calCreated} new, ${calUpdated} updated)`)
 
   console.log('Seed completed!')
 }
